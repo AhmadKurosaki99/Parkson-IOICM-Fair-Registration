@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        /* --- PARKSon GREEN THEME VARIABLES --- */
         :root {
             --parkson-green: #1c4a3b; 
             --parkson-green-hover: #123328;
@@ -24,11 +25,20 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-dark); animation: fadeIn 0.6s ease-out; }
         
-        header { background: white; padding: 15px 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-bottom: 3px solid var(--parkson-green); position: relative; z-index: 10; }
+        header { 
+            background: white; 
+            padding: 15px 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            border-bottom: 3px solid var(--parkson-green);
+            position: relative; 
+            z-index: 10; 
+        }
         header img { max-height: 60px; width: auto; margin-bottom: 5px; }
         header h1 { margin: 5px 0 0 0; font-size: 18px; color: var(--parkson-green); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
         header p { margin: 2px 0 0 0; font-size: 13px; color: var(--text-light); }
         
+        /* --- TABS --- */
         .tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #ddd; }
         .tab-btn { padding: 15px 30px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; margin: 0; width: auto; text-transform: uppercase; border-radius: 0;}
         .tab-btn:hover { color: var(--parkson-green); background: #f9f9f9; transform: none; box-shadow: none; }
@@ -39,7 +49,14 @@
 
         .container { display: flex; flex-wrap: wrap; padding: 25px; gap: 25px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
         
-        .card { background: white; padding: 25px; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); border-top: 3px solid var(--parkson-green); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 4px; 
+            box-shadow: 0 6px 18px rgba(0,0,0,0.04); 
+            border-top: 3px solid var(--parkson-green);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
         .card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
         
         .calendar-card { flex: 1.1; min-width: 350px; max-width: 480px; }
@@ -82,29 +99,18 @@
         .btn-delete:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
         .btn-delete svg { width: 18px; height: 18px; fill: currentColor; }
 
-        .sales-controls { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #ddd; align-items: flex-end;}
+        /* --- SALES GRID SPECIFIC --- */
+        .sales-controls { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #ddd; }
         .sales-controls select { margin: 0; width: auto; min-width: 200px; }
-        
-        .excel-table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; table-layout: fixed;}
-        .excel-table th, .excel-table td { border: 1px solid #e0e0e0; padding: 8px 10px; text-align: center; vertical-align: middle;}
-        
-        .excel-table th:nth-child(1) { width: 15%; }
-        .excel-table th:nth-child(2) { width: 10%; }
-        .excel-table th:nth-child(3) { width: 40%; }
-        .excel-table th:nth-child(4) { width: 20%; }
-        .excel-table th:nth-child(5) { width: 15%; }
-        
-        .excel-table thead th { background: #eef5f2; font-weight: 700; color: var(--text-dark); border-bottom: 2px solid var(--parkson-green); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
-        
-        .grid-input { width: 100%; padding: 8px; margin: 0; text-align: center; border: 1px solid transparent; background: transparent; transition: all 0.2s; border-radius: 3px; font-family: inherit; font-size: 13px; }
-        .grid-input:hover { border-color: #ddd; background: white; }
-        .grid-input:focus { border-color: var(--parkson-green); background: white; outline: none; box-shadow: 0 0 0 2px rgba(28, 74, 59, 0.1); }
-        
-        .grid-input.readonly { background: #f8f9fa; font-weight: 700; color: var(--parkson-green); cursor: not-allowed; }
-        .grid-input.readonly:hover { border-color: transparent; background: #f8f9fa; }
+        .grid-input { width: 100px; padding: 8px; margin: 0; text-align: right; border: 1px solid transparent; background: transparent; transition: all 0.2s; }
+        .grid-input:focus, .grid-input:hover { border: 1px solid var(--parkson-green); background: white; }
+        .grid-input[readonly] { background: #f9f9f9; font-weight: bold; color: var(--parkson-green); }
+        .sales-table th, .sales-table td { border: 1px solid #eee; text-align: center; padding: 10px; }
+        .sales-table th { background: var(--parkson-green-light); color: var(--parkson-green); }
+        .sales-table td:first-child, .sales-table th:first-child { text-align: left; font-weight: bold; }
+        .total-row td { background: #fcfcfc; font-weight: 800; color: var(--parkson-green); border-top: 2px solid var(--parkson-green); }
 
-        .total-row td { background: #f8f9fa; font-weight: 800; color: var(--parkson-green); border-top: 2px solid var(--parkson-green); font-size: 14px; }
-
+        /* Calendar overrides */
         #calendar { font-family: 'Segoe UI', sans-serif; }
         .fc-toolbar { margin-bottom: 20px !important; display: flex; align-items: center; justify-content: space-between; }
         .fc-toolbar-title { font-size: 18px !important; font-weight: 700 !important; color: var(--text-dark); text-transform: uppercase; }
@@ -135,11 +141,13 @@
         <p>Promotion & Fair Registration System</p>
     </header>
 
+    <!-- TABS -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('registration', event)">Event Registration</button>
-        <button class="tab-btn" onclick="switchTab('sales', event)">Sales Tracker</button>
+        <button class="tab-btn active" onclick="switchTab('registration')">Event Registration</button>
+        <button class="tab-btn" onclick="switchTab('sales')">Sales Tracker</button>
     </div>
     
+    <!-- TAB 1: REGISTRATION (Your existing code) -->
     <div id="tab-registration" class="tab-content active">
         <div class="container">
             <div class="card calendar-card">
@@ -196,31 +204,48 @@
         </div>
     </div>
 
+    <!-- TAB 2: SALES TRACKER (New) -->
     <div id="tab-sales" class="tab-content">
         <div class="container" style="flex-direction: column;">
+            
             <div class="card" style="width: 100%; box-sizing: border-box;">
-                <h2>Sales Tracker</h2>
+                <h2>Sales Tracker (Excel View)</h2>
+                
                 <div class="sales-controls">
                     <div>
-                        <label style="margin-top:0;">Select Event/Fair:</label>
+                        <label style="margin-top:0;">Select Event:</label>
                         <select id="salesEventSelect" onchange="loadSalesGrid()">
                             <option value="">Select an Event...</option>
                         </select>
                     </div>
+                    <div>
+                        <label style="margin-top:0;">Add Brand Column:</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="newBrandName" placeholder="e.g. Samsonite" style="margin:0; width:150px;">
+                            <button onclick="addBrandColumn()" style="margin:0; width:auto; padding: 0 15px;">+ Add</button>
+                        </div>
+                    </div>
                 </div>
-                <div style="overflow-x: auto; border: 1px solid #ddd; border-radius: 4px;">
-                    <table class="excel-table" id="salesGrid">
-                        <thead id="salesGridHead"></thead>
-                        <tbody id="salesGridBody"></tbody>
+
+                <div style="overflow-x: auto;">
+                    <table class="sales-table" id="salesGrid">
+                        <thead id="salesGridHead">
+                            <!-- Headers generated by JS -->
+                        </thead>
+                        <tbody id="salesGridBody">
+                            <!-- Data generated by JS -->
+                        </tbody>
                     </table>
                 </div>
             </div>
+
         </div>
     </div>
 
     <script>
+        // ⚠️ YOUR EXACT URL AND KEY
         const SUPABASE_URL = 'https://qbrbtmuwkykdvgxawuiw.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE';
+        const SUPABASE_KEY = 'sb_publishable_O11wGR3w1JrZE46hV7vMA_gyrZO9qE';
         
         let db;
         try {
@@ -232,157 +257,23 @@
         let registrations = [];
         let calendar;
         let sortAscending = true;
-        let currentSalesData = [];
 
-        window.switchTab = function(tabId, e) {
+        // --- TABS LOGIC ---
+        function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
             document.getElementById('tab-' + tabId).classList.add('active');
-            if (e) e.target.classList.add('active');
+            event.target.classList.add('active');
 
             if(tabId === 'sales') {
                 loadSalesEventsDropdown();
             } else if (tabId === 'registration') {
-                if(calendar) calendar.render(); 
+                if(calendar) calendar.render(); // Fixes calendar rendering bug when hidden
             }
-        };
+        }
 
-        window.loadSalesEventsDropdown = function() {
-            const select = document.getElementById('salesEventSelect');
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">Select an Event...</option>';
-            savedEvents.forEach(e => {
-                let opt = document.createElement('option');
-                opt.value = e.title;
-                opt.text = e.title;
-                select.appendChild(opt);
-            });
-            if(currentVal) select.value = currentVal;
-        };
-
-        window.loadSalesGrid = async function() {
-            const eventTitle = document.getElementById('salesEventSelect').value;
-            if(!eventTitle) {
-                document.getElementById('salesGridHead').innerHTML = '';
-                document.getElementById('salesGridBody').innerHTML = '';
-                return;
-            }
-
-            const event = savedEvents.find(e => e.title === eventTitle);
-            if(!event) return;
-
-            const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
-            if(error) { console.error(error); return; }
-            currentSalesData = salesData || [];
-
-            let start = new Date(event.start_date);
-            let end = new Date(event.end_date);
-            end.setDate(end.getDate() - 1); 
-
-            let dates = [];
-            let current = new Date(start);
-            while (current <= end) {
-                dates.push(new Date(current));
-                current.setDate(current.getDate() + 1);
-            }
-
-            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
-            if(brands.length === 0) brands = ["SKU Description"]; 
-
-            let headHtml = `<tr>
-                <th>Date</th>
-                <th>Day</th>`;
-            
-            brands.forEach(b => {
-                headHtml += `<th>SKU (<input type="text" value="${b === 'SKU Description' ? '' : b}" placeholder="Type SKU here..." onchange="window.updateSkuName('${b}', this.value, '${eventTitle}')" style="border: none; background: transparent; text-align: center; font-weight: 700; width: 100%; outline: none; padding: 0; margin: 0; font-size: 12px;"></th>`);
-            });
-
-            headHtml += `<th>Daily Total (RM)</th><th>POS Number</th></tr>`;
-            document.getElementById('salesGridHead').innerHTML = headHtml;
-
-            let bodyHtml = '';
-            let brandTotals = {};
-            brands.forEach(b => brandTotals[b] = 0);
-            let grandTotal = 0;
-
-            dates.forEach(d => {
-                let dayStr = String(d.getDate()).padStart(2, '0');
-                let monthStr = String(d.getMonth() + 1).padStart(2, '0');
-                let yearStr = d.getFullYear();
-                let displayDate = `${dayStr}/${monthStr}/${yearStr}`;
-                
-                let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-                let dateStr = d.toISOString().split('T')[0];
-                
-                let rowTotal = 0;
-                let posRef = '-';
-
-                bodyHtml += `<tr><td>${displayDate}</td><td>${dayName}</td>`;
-                
-                brands.forEach(b => {
-                    let entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
-                    let val = entry ? entry.amount : 0;
-                    if(entry && entry.pos_ref) posRef = entry.pos_ref;
-                    
-                    rowTotal += val;
-                    brandTotals[b] += val;
-
-                    bodyHtml += `<td><input type="number" class="grid-input" value="${val > 0 ? val.toFixed(2) : ''}" placeholder="0.00" onchange="window.updateCell('${dateStr}', '${b}', this.value, '${eventTitle}')"></td>`;
-                });
-
-                grandTotal += rowTotal;
-                bodyHtml += `<td><input type="number" class="grid-input readonly" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly placeholder="0.00"></td>`;
-                bodyHtml += `<td><input type="text" class="grid-input" value="${posRef}" onchange="window.updatePosRef('${dateStr}', '${posRef}', this.value, '${eventTitle}')"></td>`;
-                bodyHtml += `</tr>`;
-            });
-
-            bodyHtml += `<tr class="total-row"><td colspan="2">TOTAL</td>`;
-            brands.forEach(b => {
-                bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`;
-            });
-            bodyHtml += `<td>RM ${grandTotal.toFixed(2)}</td><td></td></tr>`;
-
-            document.getElementById('salesGridBody').innerHTML = bodyHtml;
-        };
-
-        window.updateSkuName = async function(oldName, newName, eventTitle) {
-            if(!newName.trim()) return;
-            if(oldName === 'SKU Description') {
-                await db.from('fair_daily_sales').insert([{
-                    event_title: eventTitle, department: "Dept 44", sale_date: savedEvents.find(e => e.title === eventTitle).start_date, brand_name: newName.trim(), amount: 0
-                }]);
-            } else {
-                await db.from('fair_daily_sales').update({ brand_name: newName.trim() }).eq('event_title', eventTitle).eq('brand_name', oldName);
-            }
-            window.loadSalesGrid();
-        };
-
-        window.updateCell = async function(dateStr, brandName, value, eventTitle) {
-            const numValue = parseFloat(value) || 0;
-            const existing = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === brandName);
-
-            if(existing) {
-                await db.from('fair_daily_sales').update({ amount: numValue }).eq('id', existing.id);
-            } else if (numValue > 0) {
-                await db.from('fair_daily_sales').insert([{
-                    event_title: eventTitle,
-                    department: "Dept 44", 
-                    sale_date: dateStr,
-                    brand_name: brandName,
-                    amount: numValue,
-                    pos_ref: "327" 
-                }]);
-            }
-            window.loadSalesGrid(); 
-        };
-
-        window.updatePosRef = async function(dateStr, oldRef, newRef, eventTitle) {
-            await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
-            window.loadSalesGrid();
-        };
-
-        // --- STANDARD FUNCTIONS ---
+        // --- INITIALIZATION ---
         const form = document.getElementById('regForm');
         const tableBody = document.getElementById('tableBody');
         const searchBar = document.getElementById('searchBar');
@@ -429,6 +320,7 @@
             } catch (err) { console.error(err); }
         }
 
+        // Registration Submission
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             if(!db) return;
@@ -521,7 +413,7 @@
         }
 
         async function deleteEvent(id) {
-            if(confirm("Delete this promotion from the calendar?")) { await db.from('events').delete().eq('id', id); await loadData(); window.loadSalesEventsDropdown(); }
+            if(confirm("Delete this promotion from the calendar?")) { await db.from('events').delete().eq('id', id); await loadData(); loadSalesEventsDropdown(); }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -537,6 +429,151 @@
             }
             loadData();
         });
+
+        // ==========================================
+        // --- SALES GRID LOGIC ---
+        // ==========================================
+        let currentSalesData = [];
+
+        function loadSalesEventsDropdown() {
+            const select = document.getElementById('salesEventSelect');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">Select an Event...</option>';
+            savedEvents.forEach(e => {
+                let opt = document.createElement('option');
+                opt.value = e.title;
+                opt.text = e.title;
+                select.appendChild(opt);
+            });
+            if(currentVal) select.value = currentVal;
+        }
+
+        async function loadSalesGrid() {
+            const eventTitle = document.getElementById('salesEventSelect').value;
+            if(!eventTitle) {
+                document.getElementById('salesGridHead').innerHTML = '';
+                document.getElementById('salesGridBody').innerHTML = '';
+                return;
+            }
+
+            // 1. Find the Event Dates
+            const event = savedEvents.find(e => e.title === eventTitle);
+            if(!event) return;
+
+            // 2. Fetch Sales Data
+            const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
+            if(error) { console.error(error); return; }
+            currentSalesData = salesData || [];
+
+            // 3. Generate Date Range
+            let start = new Date(event.start_date);
+            let end = new Date(event.end_date);
+            end.setDate(end.getDate() - 1); // Adjust for FullCalendar exclusive end date
+
+            let dates = [];
+            let current = new Date(start);
+            while (current <= end) {
+                dates.push(new Date(current));
+                current.setDate(current.getDate() + 1);
+            }
+
+            // 4. Get Unique Brands for this Event
+            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
+            if(brands.length === 0) brands = ["Brand 1"]; // Default if empty
+
+            // 5. Build Table Header
+            let headHtml = `<tr><th>Date</th><th>Day</th>`;
+            brands.forEach(b => { headHtml += `<th>${b}</th>`; });
+            headHtml += `<th>Daily Total</th><th>POS Ref</th></tr>`;
+            document.getElementById('salesGridHead').innerHTML = headHtml;
+
+            // 6. Build Table Body
+            let bodyHtml = '';
+            let brandTotals = {};
+            brands.forEach(b => brandTotals[b] = 0);
+            let grandTotal = 0;
+
+            dates.forEach(d => {
+                let dateStr = d.toISOString().split('T')[0];
+                let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+                let displayDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                
+                let rowTotal = 0;
+                let posRef = '-';
+
+                bodyHtml += `<tr><td>${displayDate}</td><td>${dayName}</td>`;
+                
+                brands.forEach(b => {
+                    let entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
+                    let val = entry ? entry.amount : 0;
+                    if(entry && entry.pos_ref) posRef = entry.pos_ref;
+                    
+                    rowTotal += val;
+                    brandTotals[b] += val;
+
+                    // Editable input for each cell
+                    bodyHtml += `<td><input type="number" class="grid-input" value="${val > 0 ? val : ''}" placeholder="0.00" onchange="updateCell('${dateStr}', '${b}', this.value, '${eventTitle}')"></td>`;
+                });
+
+                grandTotal += rowTotal;
+                bodyHtml += `<td><input type="number" class="grid-input" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly></td>`;
+                bodyHtml += `<td><input type="text" class="grid-input" value="${posRef}" onchange="updatePosRef('${dateStr}', '${posRef}', this.value, '${eventTitle}')" style="width:70px;"></td>`;
+                bodyHtml += `</tr>`;
+            });
+
+            // Total Row
+            bodyHtml += `<tr class="total-row"><td colspan="2">TOTAL</td>`;
+            brands.forEach(b => {
+                bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`;
+            });
+            bodyHtml += `<td>RM ${grandTotal.toFixed(2)}</td><td></td></tr>`;
+
+            document.getElementById('salesGridBody').innerHTML = bodyHtml;
+        }
+
+        async function updateCell(dateStr, brandName, value, eventTitle) {
+            const numValue = parseFloat(value) || 0;
+            const existing = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === brandName);
+
+            if(existing) {
+                await db.from('fair_daily_sales').update({ amount: numValue }).eq('id', existing.id);
+            } else if (numValue > 0) {
+                await db.from('fair_daily_sales').insert([{
+                    event_title: eventTitle,
+                    department: "Dept 44", // Hardcoded for now, can be dynamic later
+                    sale_date: dateStr,
+                    brand_name: brandName,
+                    amount: numValue,
+                    pos_ref: "327"
+                }]);
+            }
+            loadSalesGrid(); // Refresh grid to update totals
+        }
+
+        async function updatePosRef(dateStr, oldRef, newRef, eventTitle) {
+            // Update all entries for this date
+            await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
+            loadSalesGrid();
+        }
+
+        async function addBrandColumn() {
+            const newBrand = document.getElementById('newBrandName').value.trim();
+            const eventTitle = document.getElementById('salesEventSelect').value;
+            if(!newBrand || !eventTitle) return alert("Please select an event and enter a brand name.");
+
+            // Insert a dummy record to create the column
+            await db.from('fair_daily_sales').insert([{
+                event_title: eventTitle,
+                department: "Dept 44",
+                sale_date: savedEvents.find(e => e.title === eventTitle).start_date,
+                brand_name: newBrand,
+                amount: 0,
+                pos_ref: "327"
+            }]);
+
+            document.getElementById('newBrandName').value = "";
+            loadSalesGrid();
+        }
     </script>
 </body>
 </html>
