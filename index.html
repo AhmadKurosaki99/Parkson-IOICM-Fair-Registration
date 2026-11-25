@@ -143,18 +143,17 @@
 
     <script>
         // ==========================================
-        // ⚠️ REPLACE THESE WITH YOUR SUPABASE KEYS ⚠️
+        // ⚠️ YOUR SUPABASE KEYS ⚠️
         // ==========================================
-        const SUPABASE_URL = https://qrbrtmuwkykdvgxawuiw.supabase.co;
-        const SUPABASE_KEY = sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE;
+        // I added the missing quotes (' ') around your keys!
+        const SUPABASE_URL = 'https://qrbrtmuwkykdvgxawuiw.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE';
         
         // 1. Initialize Supabase Safely
         let db;
         try {
-            if (SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE') {
-                const { createClient } = supabase;
-                db = createClient(SUPABASE_URL, SUPABASE_KEY);
-            }
+            const { createClient } = supabase;
+            db = createClient(SUPABASE_URL, SUPABASE_KEY);
         } catch (error) {
             console.error("Supabase initialization failed:", error);
         }
@@ -174,7 +173,7 @@
         const departmentInput = document.getElementById('department');
         const newEventNameInput = document.getElementById('newEventName');
 
-        // 3. Generate Departments IMMEDIATELY (fixes the dropdown issue)
+        // 3. Generate Departments IMMEDIATELY
         for (let i = 31; i <= 55; i++) {
             let option = document.createElement('option');
             option.value = "Dept " + i;
@@ -205,13 +204,9 @@
 
         // 5. Fetch Data from Supabase
         async function loadData() {
-            if (!db) {
-                console.warn("Supabase not configured yet.");
-                return;
-            }
+            if (!db) return;
 
             try {
-                // Get Events
                 const { data: eventData, error: eventError } = await db.from('events').select('*');
                 if (!eventError && eventData) {
                     savedEvents = eventData;
@@ -223,7 +218,6 @@
                     }
                 }
 
-                // Get Registrations
                 const { data: regData, error: regError } = await db.from('registrations').select('*').order('created_at', { ascending: false });
                 if (!regError && regData) {
                     registrations = regData;
@@ -354,7 +348,7 @@
             }
         }
 
-        // 9. Initialize Calendar Immediately (fixes the missing calendar issue)
+        // 9. Initialize Calendar
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             if (calendarEl) {
@@ -364,15 +358,13 @@
                     height: 'auto', 
                     selectable: false, 
                     editable: false, 
-                    events: [], // Starts empty
+                    events: [], 
                     eventClick: function(info) {
                         deleteEvent(info.event.id);
                     }
                 });
                 calendar.render();
             }
-            
-            // After calendar loads, fetch the database data
             loadData();
         });
     </script>
