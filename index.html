@@ -259,7 +259,7 @@
     </div>
 
     <script>
-        // ⚠️ YOUR EXACT URL AND KEY (Fixed the missing 'g'!)
+        // ⚠️ YOUR EXACT URL AND KEY
         const SUPABASE_URL = 'https://qbrbtmuwkykdvgxawuiw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE';
         
@@ -495,7 +495,6 @@
             if(brands.length === 0) brands = ["SKU Description"]; 
 
             // --- BUILD SINGLE-ROW HEADER ---
-            // We loop through the brands and create an input field inside the header th
             let headHtml = `<tr>
                 <th>Date</th>
                 <th>Day</th>`;
@@ -559,12 +558,10 @@
         async function updateSkuName(oldName, newName, eventTitle) {
             if(!newName.trim()) return;
             if(oldName === 'SKU Description') {
-                // If there was no name before, we need to insert a dummy row so it saves
                 await db.from('fair_daily_sales').insert([{
                     event_title: eventTitle, department: "Dept 44", sale_date: savedEvents.find(e => e.title === eventTitle).start_date, brand_name: newName.trim(), amount: 0
                 }]);
             } else {
-                // Otherwise, just update the name of the existing SKU
                 await db.from('fair_daily_sales').update({ brand_name: newName.trim() }).eq('event_title', eventTitle).eq('brand_name', oldName);
             }
             loadSalesGrid();
@@ -582,4 +579,17 @@
                     department: "Dept 44", 
                     sale_date: dateStr,
                     brand_name: brandName,
-                    amount: num
+                    amount: numValue,
+                    pos_ref: "327" 
+                }]);
+            }
+            loadSalesGrid(); 
+        }
+
+        async function updatePosRef(dateStr, oldRef, newRef, eventTitle) {
+            await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
+            loadSalesGrid();
+        }
+    </script>
+</body>
+</html>
