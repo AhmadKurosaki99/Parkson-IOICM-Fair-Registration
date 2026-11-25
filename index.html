@@ -38,15 +38,6 @@
         header h1 { margin: 5px 0 0 0; font-size: 18px; color: var(--parkson-green); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
         header p { margin: 2px 0 0 0; font-size: 13px; color: var(--text-light); }
         
-        /* --- TABS --- */
-        .tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #ddd; }
-        .tab-btn { padding: 15px 30px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; margin: 0; width: auto; text-transform: uppercase; border-radius: 0;}
-        .tab-btn:hover { color: var(--parkson-green); background: #f9f9f9; transform: none; box-shadow: none; }
-        .tab-btn.active { color: var(--parkson-green); border-bottom: 3px solid var(--parkson-green); }
-
-        .tab-content { display: none; animation: popIn 0.4s ease-out; }
-        .tab-content.active { display: block; }
-
         .container { display: flex; flex-wrap: wrap; padding: 25px; gap: 25px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
         
         .card { 
@@ -56,12 +47,14 @@
             box-shadow: 0 6px 18px rgba(0,0,0,0.04); 
             border-top: 3px solid var(--parkson-green);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: popIn 0.5s ease-out backwards;
         }
         .card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
         
-        .calendar-card { flex: 1.1; min-width: 350px; max-width: 480px; }
-        .form-card { flex: 1; min-width: 300px; max-width: 350px; }
-        .table-card { flex: 2.2; min-width: 550px; overflow-x: auto; }
+        /* Adjusted sizes to fit better */
+        .calendar-card { flex: 1.1; min-width: 350px; max-width: 480px; animation-delay: 0.1s; }
+        .form-card { flex: 1; min-width: 300px; max-width: 350px; animation-delay: 0.2s; }
+        .table-card { flex: 2.2; min-width: 550px; animation-delay: 0.3s; overflow-x: auto; }
 
         h2 { border-bottom: 2px solid #eee; padding-bottom: 12px; margin-top: 0; font-size: 16px; color: var(--parkson-green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         
@@ -84,50 +77,66 @@
         .stat-box p { margin: 5px 0 0 0; font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th { background-color: #fcfcfc; font-weight: 700; color: var(--text-light); padding: 15px; text-align: left; border-bottom: 2px solid #ddd; font-size: 12px; letter-spacing: 0.5px;}
-        th.clickable { cursor: pointer; transition: color 0.2s; }
-        th.clickable:hover { color: var(--parkson-green); }
-        th.clickable::after { content: ' ↕'; font-size: 12px; color: #ccc; }
-        
+        th { background-color: #fcfcfc; font-weight: 700; color: var(--text-light); cursor: pointer; padding: 15px; text-align: left; border-bottom: 2px solid #ddd; transition: color 0.2s; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; white-space: nowrap;}
+        th:hover { color: var(--parkson-green); }
+        th::after { content: ' ↕'; font-size: 12px; color: #ccc; }
         td { padding: 15px; border-bottom: 1px solid #eee; transition: background 0.2s; color: var(--text-dark); vertical-align: middle; }
+        
         tbody tr { animation: slideInRow 0.3s ease-out; transition: background-color 0.2s ease; }
         tbody tr:hover { background-color: var(--parkson-green-light); }
         
         .status-active { color: white; font-weight: 700; background: var(--parkson-green); padding: 5px 10px; border-radius: 2px; font-size: 11px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;}
         
-        .btn-delete { background: transparent; color: #a0aab2; border: none; padding: 8px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; width: 32px; height: 32px; margin: 0; }
-        .btn-delete:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
-        .btn-delete svg { width: 18px; height: 18px; fill: currentColor; }
+        /* --- AESTHETIC DELETE BUTTON --- */
+        .btn-delete { 
+            background: transparent; 
+            color: #a0aab2; 
+            border: none; 
+            padding: 8px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease; 
+            width: 32px;
+            height: 32px;
+            margin: 0;
+        }
+        .btn-delete:hover { 
+            background: #fee2e2; 
+            color: #e74c3c; 
+            transform: scale(1.1);
+        }
+        .btn-delete svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
 
-        /* --- SALES GRID SPECIFIC --- */
-        .sales-controls { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #ddd; }
-        .sales-controls select { margin: 0; width: auto; min-width: 200px; }
-        .grid-input { width: 100px; padding: 8px; margin: 0; text-align: right; border: 1px solid transparent; background: transparent; transition: all 0.2s; }
-        .grid-input:focus, .grid-input:hover { border: 1px solid var(--parkson-green); background: white; }
-        .grid-input[readonly] { background: #f9f9f9; font-weight: bold; color: var(--parkson-green); }
-        .sales-table th, .sales-table td { border: 1px solid #eee; text-align: center; padding: 10px; }
-        .sales-table th { background: var(--parkson-green-light); color: var(--parkson-green); }
-        .sales-table td:first-child, .sales-table th:first-child { text-align: left; font-weight: bold; }
-        .total-row td { background: #fcfcfc; font-weight: 800; color: var(--parkson-green); border-top: 2px solid var(--parkson-green); }
-
-        /* Calendar overrides */
+        /* --- CALENDAR STYLING --- */
         #calendar { font-family: 'Segoe UI', sans-serif; }
         .fc-toolbar { margin-bottom: 20px !important; display: flex; align-items: center; justify-content: space-between; }
         .fc-toolbar-title { font-size: 18px !important; font-weight: 700 !important; color: var(--text-dark); text-transform: uppercase; }
+        
         .fc-button { background-color: white !important; border-color: #ddd !important; color: var(--text-light) !important; font-weight: 600; font-size: 13px !important; padding: 8px 14px !important; border-radius: 4px !important; text-transform: capitalize; box-shadow: none !important; transition: all 0.2s ease !important; }
         .fc-button:hover { background-color: #f0f0f0 !important; color: var(--parkson-green) !important; border-color: var(--parkson-green) !important; }
         .fc-button-active { background-color: var(--parkson-green) !important; border-color: var(--parkson-green) !important; color: white !important; }
+        
         .fc-theme-standard td, .fc-theme-standard th { border-color: #eee !important; }
         .fc-theme-standard .fc-scrollgrid { border: 1px solid #ddd !important; border-radius: 4px; overflow: hidden; }
         .fc-col-header-cell { background-color: #fafafa; padding: 12px 0 !important; }
         .fc-col-header-cell-cushion { color: var(--text-light); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         .fc-daygrid-day-number { color: var(--text-dark); font-weight: 600; font-size: 14px; padding: 10px 12px !important; }
+        
         .fc-daygrid-day:hover { background-color: #fafafa; }
         .fc-day-today { background-color: var(--parkson-green-light) !important; }
         .fc-day-today .fc-daygrid-day-number { color: var(--parkson-green); font-weight: bold; }
+        
         .fc-event { border: none !important; border-radius: 3px !important; padding: 3px 8px !important; font-size: 12px !important; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: var(--parkson-green); transition: transform 0.2s ease; }
         .fc-event:hover { transform: scale(1.02) translateY(-1px); box-shadow: 0 4px 8px rgba(28, 74, 59, 0.3); }
         .fc-daygrid-event-dot { border-color: white !important; margin-right: 6px; }
+
         .calendar-legend { display: flex; gap: 15px; margin-top: 15px; font-size: 12px; color: var(--text-light); justify-content: center; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-dot { width: 12px; height: 12px; border-radius: 2px; background-color: var(--parkson-green); }
@@ -140,112 +149,66 @@
         <h1>IOICM 127</h1>
         <p>Promotion & Fair Registration System</p>
     </header>
-
-    <!-- TABS -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('registration')">Event Registration</button>
-        <button class="tab-btn" onclick="switchTab('sales')">Sales Tracker</button>
-    </div>
     
-    <!-- TAB 1: REGISTRATION (Your existing code) -->
-    <div id="tab-registration" class="tab-content active">
-        <div class="container">
-            <div class="card calendar-card">
-                <h2>Promotion Calendar</h2>
-                <div id="calendar"></div>
-                <div class="calendar-legend">
-                    <div class="legend-item"><div class="legend-dot"></div> Promotions</div>
-                </div>
-            </div>
-            
-            <div class="card form-card">
-                <h2>Fair Registration</h2>
-                <form id="regForm">
-                    <label>Department:</label>
-                    <select id="department" required>
-                        <option value="" disabled selected>Select Department...</option>
-                    </select>
-                    <label>Start & End Date:</label>
-                    <div class="date-row">
-                        <div class="date-col"><input type="date" id="startDate" required></div>
-                        <div class="date-col"><input type="date" id="endDate" required></div>
-                    </div>
-                    <label>Duration (Days):</label>
-                    <input type="text" id="duration" readonly placeholder="Auto-calculated...">
-                    <label>New Promotion/Event Name:</label>
-                    <input type="text" id="newEventName" placeholder="e.g. Mega Sale..." required>
-                    <label>Remarks / Notes:</label>
-                    <textarea id="notes" rows="2" placeholder="Optional details..."></textarea>
-                    <button type="submit">Add Event to Calendar</button>
-                </form>
-            </div>
-
-            <div class="card table-card">
-                <h2>Dashboard & Registrations</h2>
-                <div class="dashboard-stats">
-                    <div class="stat-box"><h3 id="totalRegs">0</h3><p>Total Registrations</p></div>
-                    <div class="stat-box"><h3 id="totalDays">0</h3><p>Total Days Tracked</p></div>
-                </div>
-                <input type="text" id="searchBar" placeholder="Search/Filter...">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="clickable" onclick="sortTable(0)">Department</th>
-                            <th class="clickable" onclick="sortTable(1)">Event</th>
-                            <th class="clickable" onclick="sortTable(2)">Duration</th>
-                            <th>Status</th>
-                            <th>Remarks</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+    <div class="container">
+        
+        <div class="card calendar-card">
+            <h2>Promotion Calendar</h2>
+            <div id="calendar"></div>
+            <div class="calendar-legend">
+                <div class="legend-item"><div class="legend-dot"></div> Promotions</div>
             </div>
         </div>
-    </div>
-
-    <!-- TAB 2: SALES TRACKER (New) -->
-    <div id="tab-sales" class="tab-content">
-        <div class="container" style="flex-direction: column;">
-            
-            <div class="card" style="width: 100%; box-sizing: border-box;">
-                <h2>Sales Tracker (Excel View)</h2>
-                
-                <div class="sales-controls">
-                    <div>
-                        <label style="margin-top:0;">Select Event:</label>
-                        <select id="salesEventSelect" onchange="loadSalesGrid()">
-                            <option value="">Select an Event...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="margin-top:0;">Add Brand Column:</label>
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="newBrandName" placeholder="e.g. Samsonite" style="margin:0; width:150px;">
-                            <button onclick="addBrandColumn()" style="margin:0; width:auto; padding: 0 15px;">+ Add</button>
-                        </div>
-                    </div>
+        
+        <div class="card form-card">
+            <h2>Fair Registration</h2>
+            <form id="regForm">
+                <label>Department:</label>
+                <select id="department" required>
+                    <option value="" disabled selected>Select Department...</option>
+                </select>
+                <label>Start & End Date:</label>
+                <div class="date-row">
+                    <div class="date-col"><input type="date" id="startDate" required></div>
+                    <div class="date-col"><input type="date" id="endDate" required></div>
                 </div>
+                <label>Duration (Days):</label>
+                <input type="text" id="duration" readonly placeholder="Auto-calculated...">
+                <label>New Promotion/Event Name:</label>
+                <input type="text" id="newEventName" placeholder="e.g. Mega Sale..." required>
+                <label>Remarks / Notes:</label>
+                <textarea id="notes" rows="2" placeholder="Optional details..."></textarea>
+                <button type="submit">Add Event to Calendar</button>
+            </form>
+        </div>
 
-                <div style="overflow-x: auto;">
-                    <table class="sales-table" id="salesGrid">
-                        <thead id="salesGridHead">
-                            <!-- Headers generated by JS -->
-                        </thead>
-                        <tbody id="salesGridBody">
-                            <!-- Data generated by JS -->
-                        </tbody>
-                    </table>
-                </div>
+        <div class="card table-card">
+            <h2>Dashboard & Registrations</h2>
+            <div class="dashboard-stats">
+                <div class="stat-box"><h3 id="totalRegs">0</h3><p>Total Registrations</p></div>
+                <div class="stat-box"><h3 id="totalDays">0</h3><p>Total Days Tracked</p></div>
             </div>
-
+            <input type="text" id="searchBar" placeholder="Search/Filter...">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Department</th>
+                        <th onclick="sortTable(1)">Event</th>
+                        <th onclick="sortTable(2)">Duration</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
         </div>
     </div>
 
     <script>
         // ⚠️ YOUR EXACT URL AND KEY
         const SUPABASE_URL = 'https://qbrbtmuwkykdvgxawuiw.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_O11wGR3w1JrZE46hV7vMA_gyrZO9qE';
+        const SUPABASE_KEY = 'sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE';
         
         let db;
         try {
@@ -258,22 +221,6 @@
         let calendar;
         let sortAscending = true;
 
-        // --- TABS LOGIC ---
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById('tab-' + tabId).classList.add('active');
-            event.target.classList.add('active');
-
-            if(tabId === 'sales') {
-                loadSalesEventsDropdown();
-            } else if (tabId === 'registration') {
-                if(calendar) calendar.render(); // Fixes calendar rendering bug when hidden
-            }
-        }
-
-        // --- INITIALIZATION ---
         const form = document.getElementById('regForm');
         const tableBody = document.getElementById('tableBody');
         const searchBar = document.getElementById('searchBar');
@@ -320,7 +267,6 @@
             } catch (err) { console.error(err); }
         }
 
-        // Registration Submission
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             if(!db) return;
@@ -389,7 +335,8 @@
         searchBar.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const filtered = registrations.filter(item => 
-                item.department.toLowerCase().includes(searchTerm) || item.event_title.toLowerCase().includes(searchTerm)
+                item.department.toLowerCase().includes(searchTerm) ||
+                item.event_title.toLowerCase().includes(searchTerm)
             );
             renderDashboard(filtered);
         });
@@ -413,7 +360,7 @@
         }
 
         async function deleteEvent(id) {
-            if(confirm("Delete this promotion from the calendar?")) { await db.from('events').delete().eq('id', id); await loadData(); loadSalesEventsDropdown(); }
+            if(confirm("Delete this promotion from the calendar?")) { await db.from('events').delete().eq('id', id); await loadData(); }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -429,151 +376,6 @@
             }
             loadData();
         });
-
-        // ==========================================
-        // --- SALES GRID LOGIC ---
-        // ==========================================
-        let currentSalesData = [];
-
-        function loadSalesEventsDropdown() {
-            const select = document.getElementById('salesEventSelect');
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">Select an Event...</option>';
-            savedEvents.forEach(e => {
-                let opt = document.createElement('option');
-                opt.value = e.title;
-                opt.text = e.title;
-                select.appendChild(opt);
-            });
-            if(currentVal) select.value = currentVal;
-        }
-
-        async function loadSalesGrid() {
-            const eventTitle = document.getElementById('salesEventSelect').value;
-            if(!eventTitle) {
-                document.getElementById('salesGridHead').innerHTML = '';
-                document.getElementById('salesGridBody').innerHTML = '';
-                return;
-            }
-
-            // 1. Find the Event Dates
-            const event = savedEvents.find(e => e.title === eventTitle);
-            if(!event) return;
-
-            // 2. Fetch Sales Data
-            const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
-            if(error) { console.error(error); return; }
-            currentSalesData = salesData || [];
-
-            // 3. Generate Date Range
-            let start = new Date(event.start_date);
-            let end = new Date(event.end_date);
-            end.setDate(end.getDate() - 1); // Adjust for FullCalendar exclusive end date
-
-            let dates = [];
-            let current = new Date(start);
-            while (current <= end) {
-                dates.push(new Date(current));
-                current.setDate(current.getDate() + 1);
-            }
-
-            // 4. Get Unique Brands for this Event
-            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
-            if(brands.length === 0) brands = ["Brand 1"]; // Default if empty
-
-            // 5. Build Table Header
-            let headHtml = `<tr><th>Date</th><th>Day</th>`;
-            brands.forEach(b => { headHtml += `<th>${b}</th>`; });
-            headHtml += `<th>Daily Total</th><th>POS Ref</th></tr>`;
-            document.getElementById('salesGridHead').innerHTML = headHtml;
-
-            // 6. Build Table Body
-            let bodyHtml = '';
-            let brandTotals = {};
-            brands.forEach(b => brandTotals[b] = 0);
-            let grandTotal = 0;
-
-            dates.forEach(d => {
-                let dateStr = d.toISOString().split('T')[0];
-                let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-                let displayDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                
-                let rowTotal = 0;
-                let posRef = '-';
-
-                bodyHtml += `<tr><td>${displayDate}</td><td>${dayName}</td>`;
-                
-                brands.forEach(b => {
-                    let entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
-                    let val = entry ? entry.amount : 0;
-                    if(entry && entry.pos_ref) posRef = entry.pos_ref;
-                    
-                    rowTotal += val;
-                    brandTotals[b] += val;
-
-                    // Editable input for each cell
-                    bodyHtml += `<td><input type="number" class="grid-input" value="${val > 0 ? val : ''}" placeholder="0.00" onchange="updateCell('${dateStr}', '${b}', this.value, '${eventTitle}')"></td>`;
-                });
-
-                grandTotal += rowTotal;
-                bodyHtml += `<td><input type="number" class="grid-input" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly></td>`;
-                bodyHtml += `<td><input type="text" class="grid-input" value="${posRef}" onchange="updatePosRef('${dateStr}', '${posRef}', this.value, '${eventTitle}')" style="width:70px;"></td>`;
-                bodyHtml += `</tr>`;
-            });
-
-            // Total Row
-            bodyHtml += `<tr class="total-row"><td colspan="2">TOTAL</td>`;
-            brands.forEach(b => {
-                bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`;
-            });
-            bodyHtml += `<td>RM ${grandTotal.toFixed(2)}</td><td></td></tr>`;
-
-            document.getElementById('salesGridBody').innerHTML = bodyHtml;
-        }
-
-        async function updateCell(dateStr, brandName, value, eventTitle) {
-            const numValue = parseFloat(value) || 0;
-            const existing = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === brandName);
-
-            if(existing) {
-                await db.from('fair_daily_sales').update({ amount: numValue }).eq('id', existing.id);
-            } else if (numValue > 0) {
-                await db.from('fair_daily_sales').insert([{
-                    event_title: eventTitle,
-                    department: "Dept 44", // Hardcoded for now, can be dynamic later
-                    sale_date: dateStr,
-                    brand_name: brandName,
-                    amount: numValue,
-                    pos_ref: "327"
-                }]);
-            }
-            loadSalesGrid(); // Refresh grid to update totals
-        }
-
-        async function updatePosRef(dateStr, oldRef, newRef, eventTitle) {
-            // Update all entries for this date
-            await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
-            loadSalesGrid();
-        }
-
-        async function addBrandColumn() {
-            const newBrand = document.getElementById('newBrandName').value.trim();
-            const eventTitle = document.getElementById('salesEventSelect').value;
-            if(!newBrand || !eventTitle) return alert("Please select an event and enter a brand name.");
-
-            // Insert a dummy record to create the column
-            await db.from('fair_daily_sales').insert([{
-                event_title: eventTitle,
-                department: "Dept 44",
-                sale_date: savedEvents.find(e => e.title === eventTitle).start_date,
-                brand_name: newBrand,
-                amount: 0,
-                pos_ref: "327"
-            }]);
-
-            document.getElementById('newBrandName').value = "";
-            loadSalesGrid();
-        }
     </script>
 </body>
 </html>
