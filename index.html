@@ -148,12 +148,18 @@
         const SUPABASE_URL = https://qrbrtmuwkykdvgxawuiw.supabase.co;
         const SUPABASE_KEY = sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE;
         
-        const { createClient } = supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 1. Initialize Supabase Safely
+        let db;
+        try {
+            if (SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE') {
+                const { createClient } = supabase;
+                db = createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch (error) {
+            console.error("Supabase initialization failed:", error);
+        }
 
-        // ==========================================
-        // VARIABLES
-        // ==========================================
+        // 2. Variables
         let savedEvents = [];
         let registrations = [];
         let calendar;
@@ -168,6 +174,7 @@
         const departmentInput = document.getElementById('department');
         const newEventNameInput = document.getElementById('newEventName');
 
+        // 3. Generate Departments IMMEDIATELY (fixes the dropdown issue)
         for (let i = 31; i <= 55; i++) {
             let option = document.createElement('option');
             option.value = "Dept " + i;
@@ -175,6 +182,7 @@
             departmentInput.appendChild(option);
         }
 
+        // 4. Calculate Duration
         function calculateDuration() {
             const start = startDateInput.value;
             const end = endDateInput.value;
@@ -195,40 +203,42 @@
         startDateInput.addEventListener('change', calculateDuration);
         endDateInput.addEventListener('change', calculateDuration);
 
-        // ==========================================
-        // FETCH DATA FROM SUPABASE
-        // ==========================================
+        // 5. Fetch Data from Supabase
         async function loadData() {
-            // Get Events
-            const { data: eventData, error: eventError } = await db.from('events').select('*');
-            if (!eventError) {
-                savedEvents = eventData;
-                if(calendar) {
-                    calendar.removeAllEvents();
-                    savedEvents.forEach(e => {
-                        calendar.addEvent({ id: e.id, title: e.title, start: e.start_date, end: e.end_date, color: '#9b59b6' });
-                    });
-                }
-            } else {
-                console.error("Error loading events:", eventError);
+            if (!db) {
+                console.warn("Supabase not configured yet.");
+                return;
             }
 
-            // Get Registrations
-            const { data: regData, error: regError } = await db.from('registrations').select('*').order('created_at', { ascending: false });
-            if (!regError) {
-                registrations = regData;
-                renderDashboard();
-            } else {
-                console.error("Error loading registrations:", regError);
+            try {
+                // Get Events
+                const { data: eventData, error: eventError } = await db.from('events').select('*');
+                if (!eventError && eventData) {
+                    savedEvents = eventData;
+                    if(calendar) {
+                        calendar.removeAllEvents();
+                        savedEvents.forEach(e => {
+                            calendar.addEvent({ id: e.id, title: e.title, start: e.start_date, end: e.end_date, color: '#9b59b6' });
+                        });
+                    }
+                }
+
+                // Get Registrations
+                const { data: regData, error: regError } = await db.from('registrations').select('*').order('created_at', { ascending: false });
+                if (!regError && regData) {
+                    registrations = regData;
+                    renderDashboard();
+                }
+            } catch (err) {
+                console.error("Error loading data:", err);
             }
         }
 
-        // ==========================================
-        // FORM SUBMISSION
-        // ==========================================
+        // 6. Form Submission
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            if(!db) { alert("Database not connected yet. Check your API keys."); return; }
             if(!departmentInput.value) { alert("Please select a department."); return; }
             if (!newEventNameInput.value.trim()) { alert("Please enter an event name."); return; }
             if (new Date(endDateInput.value) < new Date(startDateInput.value)) { alert("End Date cannot be before Start Date!"); return; }
@@ -241,30 +251,33 @@
             endExclusive.setDate(endExclusive.getDate() + 1);
             let endString = endExclusive.toISOString().split('T')[0];
 
-            let existingEvent = savedEvents.find(e => e.title.toLowerCase() === eventName.toLowerCase());
-            
-            if (existingEvent) {
-                await db.from('events').update({ start_date: startVal, end_date: endString }).eq('id', existingEvent.id);
-            } else {
-                await db.from('events').insert([{ title: eventName, start_date: startVal, end_date: endString }]);
+            try {
+                let existingEvent = savedEvents.find(e => e.title.toLowerCase() === eventName.toLowerCase());
+                
+                if (existingEvent) {
+                    await db.from('events').update({ start_date: startVal, end_date: endString }).eq('id', existingEvent.id);
+                } else {
+                    await db.from('events').insert([{ title: eventName, start_date: startVal, end_date: endString }]);
+                }
+
+                await db.from('registrations').insert([{
+                    department: departmentInput.value,
+                    event_title: eventName,
+                    duration: durationInput.value,
+                    status: "Active",
+                    notes: document.getElementById('notes').value
+                }]);
+
+                form.reset();
+                durationInput.value = "";
+                await loadData(); 
+            } catch (err) {
+                alert("Error saving data. Check the console (F12) for details.");
+                console.error(err);
             }
-
-            await db.from('registrations').insert([{
-                department: departmentInput.value,
-                event_title: eventName,
-                duration: durationInput.value,
-                status: "Active",
-                notes: document.getElementById('notes').value
-            }]);
-
-            form.reset();
-            durationInput.value = "";
-            await loadData(); 
         });
 
-        // ==========================================
-        // RENDER DASHBOARD
-        // ==========================================
+        // 7. Render Dashboard
         function renderDashboard(dataToRender = registrations) {
             tableBody.innerHTML = '';
             document.getElementById('totalRegs').innerText = dataToRender.length;
@@ -296,9 +309,7 @@
             });
         }
 
-        // ==========================================
-        // SEARCH, SORT, DELETE
-        // ==========================================
+        // 8. Search, Sort, Delete
         searchBar.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const filtered = registrations.filter(item => 
@@ -328,6 +339,7 @@
         }
 
         async function deleteRegistration(id) {
+            if(!db) return;
             if(confirm("Are you sure you want to delete this registration?")) {
                 await db.from('registrations').delete().eq('id', id);
                 await loadData();
@@ -335,15 +347,14 @@
         }
 
         async function deleteEvent(id) {
+            if(!db) return;
             if(confirm("Delete this promotion from the calendar?")) {
                 await db.from('events').delete().eq('id', id);
                 await loadData();
             }
         }
 
-        // ==========================================
-        // CALENDAR INITIALIZATION
-        // ==========================================
+        // 9. Initialize Calendar Immediately (fixes the missing calendar issue)
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             if (calendarEl) {
@@ -353,13 +364,15 @@
                     height: 'auto', 
                     selectable: false, 
                     editable: false, 
-                    events: [],
+                    events: [], // Starts empty
                     eventClick: function(info) {
                         deleteEvent(info.event.id);
                     }
                 });
                 calendar.render();
             }
+            
+            // After calendar loads, fetch the database data
             loadData();
         });
     </script>
