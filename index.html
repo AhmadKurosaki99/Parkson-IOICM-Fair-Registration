@@ -11,7 +11,7 @@
     <style>
         /* --- PARKSon GREEN THEME VARIABLES --- */
         :root {
-            --parkson-green: #1c4a3b; /* Dark green from your logo */
+            --parkson-green: #1c4a3b; 
             --parkson-green-hover: #123328;
             --parkson-green-light: #eef5f2;
             --bg-color: #f4f6f8;
@@ -25,7 +25,6 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-dark); animation: fadeIn 0.6s ease-out; }
         
-        /* Header designed around the logo */
         header { 
             background: white; 
             padding: 15px 20px; 
@@ -35,17 +34,12 @@
             position: relative; 
             z-index: 10; 
         }
-        header img {
-            max-height: 60px; /* Adjust this to make the  bigger or smaller */
-            width: auto;
-            margin-bottom: 5px;
-        }
+        header img { max-height: 60px; width: auto; margin-bottom: 5px; }
         header h1 { margin: 5px 0 0 0; font-size: 18px; color: var(--parkson-green); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
         header p { margin: 2px 0 0 0; font-size: 13px; color: var(--text-light); }
         
         .container { display: flex; flex-wrap: wrap; padding: 25px; gap: 25px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
         
-        /* Cards */
         .card { 
             background: white; 
             padding: 25px; 
@@ -63,7 +57,6 @@
 
         h2 { border-bottom: 2px solid #eee; padding-bottom: 12px; margin-top: 0; font-size: 16px; color: var(--parkson-green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* Form Elements */
         label { font-size: 13px; font-weight: 700; color: var(--text-dark); display: block; margin-top: 15px; }
         input, select, textarea { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #dcdcdc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 14px; transition: all 0.3s ease; background: #fafafa; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--parkson-green); background: white; box-shadow: 0 0 0 3px rgba(28, 74, 59, 0.1); }
@@ -72,32 +65,52 @@
         .date-row { display: flex; gap: 15px; }
         .date-col { flex: 1; }
 
-        /* Buttons */
         button { background: var(--parkson-green); color: white; border: none; padding: 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 15px; font-weight: 700; transition: all 0.2s ease; margin-top: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
         button:hover { background: var(--parkson-green-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(28, 74, 59, 0.3); }
         button:active { transform: translateY(0); }
 
-        /* Dashboard Stats */
         .dashboard-stats { display: flex; gap: 20px; margin-bottom: 25px; }
         .stat-box { background: #fff; padding: 20px; border-radius: 4px; flex: 1; text-align: center; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: all 0.3s ease; }
         .stat-box:hover { border-color: var(--parkson-green); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .stat-box h3 { margin: 0; font-size: 32px; color: var(--parkson-green); font-weight: 700; }
         .stat-box p { margin: 5px 0 0 0; font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
 
-        /* Table */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         th { background-color: #fcfcfc; font-weight: 700; color: var(--text-light); cursor: pointer; padding: 15px; text-align: left; border-bottom: 2px solid #ddd; transition: color 0.2s; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
         th:hover { color: var(--parkson-green); }
         th::after { content: ' ↕'; font-size: 12px; color: #ccc; }
-        td { padding: 15px; border-bottom: 1px solid #eee; transition: background 0.2s; color: var(--text-dark); }
+        td { padding: 15px; border-bottom: 1px solid #eee; transition: background 0.2s; color: var(--text-dark); vertical-align: middle; }
         
         tbody tr { animation: slideInRow 0.3s ease-out; transition: background-color 0.2s ease; }
         tbody tr:hover { background-color: var(--parkson-green-light); }
         
         .status-active { color: white; font-weight: 700; background: var(--parkson-green); padding: 5px 10px; border-radius: 2px; font-size: 11px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        .btn-delete { background: transparent; color: #d9534f; border: 1px solid #d9534f; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-weight: 700; font-size: 12px; margin: 0; width: auto; transition: all 0.2s; box-shadow: none; text-transform: uppercase;}
-        .btn-delete:hover { background: #d9534f; color: white; }
+        /* --- NEW AESTHETIC DELETE BUTTON --- */
+        .btn-delete { 
+            background: transparent; 
+            color: #a0aab2; 
+            border: none; 
+            padding: 8px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease; 
+            width: 32px;
+            height: 32px;
+        }
+        .btn-delete:hover { 
+            background: #fee2e2; 
+            color: #e74c3c; 
+            transform: scale(1.1);
+        }
+        .btn-delete svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
 
         /* --- CALENDAR STYLING --- */
         #calendar { font-family: 'Segoe UI', sans-serif; }
@@ -130,7 +143,7 @@
 <body>
 
     <header>
-        <!-- MAKE SURE YOUR LOGO IMAGE IS NAMED logo.png AND UPLOADED TO GITHUB -->
+        <!-- MAKE SURE YOUR LOGO IMAGE IS NAMED EXACTLY AS UPLOADED TO GITHUB -->
         <img src="Parkson-logo-300x225.png" alt="Parkson Logo">
         <h1>IOICM 127</h1>
         <p>Promotion & Fair Registration System</p>
@@ -192,8 +205,8 @@
     </div>
 
     <script>
-        // ⚠️ YOUR SUPABASE KEYS
-        const SUPABASE_URL = 'https://qbrbtmuwkykdvgxawuiw.supabase.co';
+        // ⚠️ YOUR SUPABASE KEYS (TYPO FIXED: qr instead of qb)
+        const SUPABASE_URL = 'https://qrbrtmuwkykdvgxawuiw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE';
         
         let db;
@@ -308,7 +321,11 @@
                     <td>${item.duration || 'N/A'}</td>
                     <td><span class="status-active">${item.status}</span></td>
                     <td>${item.notes || '-'}</td>
-                    <td><button class="btn-delete" onclick="deleteRegistration(${item.id})">Delete</button></td>
+                    <td style="text-align: center;">
+                        <button class="btn-delete" onclick="deleteRegistration(${item.id})" title="Delete Registration">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </button>
+                    </td>
                 </tr>`;
                 tableBody.innerHTML += row;
             });
