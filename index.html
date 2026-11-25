@@ -4,199 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parkson IOICM 127 - Promotion System</title>
+    
+    <!-- FullCalendar -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
-    <style>
-        /* =========================================
-           ANIMATIONS & KEYFRAMES
-           ========================================= */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInRow {
-            from { opacity: 0; transform: translateX(-15px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes popIn {
-            0% { transform: scale(0.95); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+    
+    <!-- SUPABASE LIBRARY -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        /* Basic, clean styling */
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRow { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #eef2f5; color: #333; animation: fadeIn 0.6s ease-out; }
         header { background: #2c3e50; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; z-index: 10; }
         header h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 0.5px; }
         header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.8; }
-        
-        /* Layout */
         .container { display: flex; flex-wrap: wrap; padding: 20px; gap: 20px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
-        
-        /* Card Styling & Hover Lift */
-        .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-            border: 1px solid #e1e8ed; 
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: popIn 0.5s ease-out backwards;
-        }
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.08);
-        }
-        
-        /* Staggered Card Animations */
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; transition: transform 0.3s ease, box-shadow 0.3s ease; animation: popIn 0.5s ease-out backwards; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 12px 20px rgba(0,0,0,0.08); }
         .calendar-card { flex: 1.2; min-width: 380px; max-width: 550px; animation-delay: 0.1s; }
         .form-card { flex: 1; min-width: 320px; max-width: 380px; animation-delay: 0.2s; }
         .table-card { flex: 2; min-width: 400px; animation-delay: 0.3s; }
-
         h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; font-size: 18px; color: #2c3e50; }
-        
-        /* Form styling */
         label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-top: 15px; transition: color 0.2s; }
-        input, select, textarea { 
-            width: 100%; 
-            padding: 10px; 
-            margin: 5px 0 10px 0; 
-            border: 1px solid #ccd1d9; 
-            border-radius: 6px; 
-            box-sizing: border-box; 
-            font-family: inherit; 
-            font-size: 14px; 
-            transition: all 0.3s ease;
-        }
-        input:focus, select:focus, textarea:focus { 
-            outline: none; 
-            border-color: #3498db; 
-            box-shadow: 0 0 0 3px rgba(52,152,219,0.15); 
-            transform: translateY(-1px);
-        }
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 10px 0; border: 1px solid #ccd1d9; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; transition: all 0.3s ease; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52,152,219,0.15); transform: translateY(-1px); }
         input[readonly] { background-color: #f0f4f8; color: #555; cursor: not-allowed; border-color: #d1d9e6; }
-        
-        /* Two columns for dates */
         .date-row { display: flex; gap: 10px; }
         .date-col { flex: 1; }
-
-        /* Button Styling with Hover/Press Animation */
-        button { 
-            background: #3498db; 
-            color: white; 
-            border: none; 
-            padding: 14px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            width: 100%; 
-            font-size: 16px; 
-            font-weight: bold; 
-            transition: all 0.2s ease; 
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(52,152,219,0.2);
-        }
-        button:hover { 
-            background: #2980b9; 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(52,152,219,0.3);
-        }
-        button:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 4px rgba(52,152,219,0.2);
-        }
-
-        /* --- DASHBOARD STYLING --- */
+        button { background: #3498db; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; transition: all 0.2s ease; margin-top: 20px; box-shadow: 0 4px 6px rgba(52,152,219,0.2); }
+        button:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(52,152,219,0.3); }
+        button:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(52,152,219,0.2); }
         .dashboard-stats { display: flex; gap: 15px; margin-bottom: 20px; }
         .stat-box { background: #f8f9fa; padding: 15px; border-radius: 8px; flex: 1; text-align: center; border: 1px solid #eee; transition: all 0.3s ease; }
         .stat-box:hover { background: #fff; border-color: #d1d9e6; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         .stat-box h3 { margin: 0; font-size: 24px; color: #3498db; }
         .stat-box p { margin: 5px 0 0 0; font-size: 13px; color: #777; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th { background-color: #f8f9fa; font-weight: 600; color: #555; cursor: pointer; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; transition: background 0.2s; }
         th:hover { background-color: #e2e6ea; color: #2c3e50; }
         th::after { content: ' ↕'; font-size: 12px; color: #aaa; }
         td { padding: 12px; border-bottom: 1px solid #eee; transition: background 0.2s; }
-        
-        /* Table Row Animation */
-        tbody tr {
-            animation: slideInRow 0.3s ease-out;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-        tbody tr:hover {
-            background-color: #f8fafc;
-            transform: scale(1.005);
-        }
-        
+        tbody tr { animation: slideInRow 0.3s ease-out; transition: background-color 0.2s ease, transform 0.2s ease; }
+        tbody tr:hover { background-color: #f8fafc; transform: scale(1.005); }
         .status-active { color: #27ae60; font-weight: bold; background: #eafaf1; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; }
-        
         .btn-delete { background: #fee2e2; color: #e74c3c; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin: 0; width: auto; transition: all 0.2s; box-shadow: none;}
         .btn-delete:hover { background: #e74c3c; color: white; transform: scale(1.05); }
         .btn-delete:active { transform: scale(0.95); }
-
-        /* =========================================
-           AESTHETIC CALENDAR STYLING
-           ========================================= */
         #calendar { font-family: 'Segoe UI', sans-serif; }
-        
-        /* Toolbar Layout */
         .fc-toolbar { margin-bottom: 20px !important; display: flex; align-items: center; justify-content: space-between; }
         .fc-toolbar-title { font-size: 18px !important; font-weight: 700 !important; color: #1e293b; }
-        
-        /* Unified Button Styling */
-        .fc-button { 
-            background-color: #f1f5f9 !important; 
-            border-color: #e2e8f0 !important; 
-            color: #475569 !important; 
-            font-weight: 600; 
-            font-size: 12px !important; 
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            text-transform: capitalize;
-            box-shadow: none !important;
-            transition: all 0.2s ease !important;
-        }
+        .fc-button { background-color: #f1f5f9 !important; border-color: #e2e8f0 !important; color: #475569 !important; font-weight: 600; font-size: 12px !important; padding: 6px 12px !important; border-radius: 6px !important; text-transform: capitalize; box-shadow: none !important; transition: all 0.2s ease !important; }
         .fc-button:hover { background-color: #e2e8f0 !important; color: #1e293b !important; transform: translateY(-1px); }
         .fc-button:active { transform: translateY(1px); }
         .fc-button-active { background-color: #3498db !important; border-color: #3498db !important; color: white !important; }
-        
-        /* Specific Tweaks for the arrows */
         .fc-prev-button, .fc-next-button { padding: 6px 10px !important; font-size: 14px !important; }
-
-        /* Grid & Cells */
         .fc-theme-standard td, .fc-theme-standard th { border-color: #f1f5f9 !important; }
         .fc-theme-standard .fc-scrollgrid { border: 1px solid #e2e8f0 !important; border-radius: 8px; overflow: hidden; }
         .fc-col-header-cell { background-color: #f8fafc; padding: 10px 0 !important; }
         .fc-col-header-cell-cushion { color: #64748b; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .fc-daygrid-day-number { color: #475569; font-weight: 500; font-size: 13px; padding: 8px 10px !important; }
-        
-        /* Day Hover Effect */
         .fc-daygrid-day { transition: background-color 0.2s ease; }
         .fc-daygrid-day:hover { background-color: #f8fafc; }
-        
-        /* Today Highlight */
         .fc-day-today { background-color: #eff6ff !important; }
         .fc-day-today .fc-daygrid-day-number { color: #3498db; font-weight: bold; }
-
-        /* Events Look (Hover Pop) */
-        .fc-event { 
-            border: none !important; 
-            border-radius: 4px !important; 
-            padding: 2px 6px !important; 
-            font-size: 12px !important; 
-            font-weight: 500; 
-            cursor: pointer; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
-            background-color: #9b59b6; 
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .fc-event:hover { 
-            transform: scale(1.02) translateY(-1px);
-            box-shadow: 0 4px 6px rgba(155, 89, 182, 0.4);
-            z-index: 5;
-        }
-        
+        .fc-event { border: none !important; border-radius: 4px !important; padding: 2px 6px !important; font-size: 12px !important; font-weight: 500; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); background-color: #9b59b6; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .fc-event:hover { transform: scale(1.02) translateY(-1px); box-shadow: 0 4px 6px rgba(155, 89, 182, 0.4); z-index: 5; }
         .fc-daygrid-event-dot { border-color: white !important; margin-right: 6px; }
-
-        /* Legend */
         .calendar-legend { display: flex; gap: 15px; margin-top: 15px; font-size: 12px; color: #64748b; justify-content: center; }
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #9b59b6; }
@@ -224,32 +98,21 @@
         <div class="card form-card">
             <h2>Fair Registration</h2>
             <form id="regForm">
-                
                 <label>Department:</label>
                 <select id="department" required>
                     <option value="" disabled selected>Select Department...</option>
-                    <!-- Generated by JS -->
                 </select>
-
                 <label>Start & End Date:</label>
                 <div class="date-row">
-                    <div class="date-col">
-                        <input type="date" id="startDate" required title="Start Date">
-                    </div>
-                    <div class="date-col">
-                        <input type="date" id="endDate" required title="End Date">
-                    </div>
+                    <div class="date-col"><input type="date" id="startDate" required></div>
+                    <div class="date-col"><input type="date" id="endDate" required></div>
                 </div>
-
                 <label>Duration (Days):</label>
                 <input type="text" id="duration" readonly placeholder="Auto-calculated...">
-
                 <label>New Promotion/Event Name:</label>
-                <input type="text" id="newEventName" placeholder="e.g. Mega Sale, Health Fair..." required>
-
+                <input type="text" id="newEventName" placeholder="e.g. Mega Sale..." required>
                 <label>Remarks / Notes:</label>
                 <textarea id="notes" rows="2" placeholder="Optional details..."></textarea>
-
                 <button type="submit">Add Event to Calendar</button>
             </form>
         </div>
@@ -257,20 +120,11 @@
         <!-- MODULE: Customized Dashboard -->
         <div class="card table-card">
             <h2>Dashboard & Registrations</h2>
-            
             <div class="dashboard-stats">
-                <div class="stat-box">
-                    <h3 id="totalRegs">0</h3>
-                    <p>Total Registrations</p>
-                </div>
-                <div class="stat-box">
-                    <h3 id="totalDays">0</h3>
-                    <p>Total Days Tracked</p>
-                </div>
+                <div class="stat-box"><h3 id="totalRegs">0</h3><p>Total Registrations</p></div>
+                <div class="stat-box"><h3 id="totalDays">0</h3><p>Total Days Tracked</p></div>
             </div>
-
-            <input type="text" id="searchBar" placeholder="Search/Filter by department, event, or remarks...">
-            
+            <input type="text" id="searchBar" placeholder="Search/Filter...">
             <table>
                 <thead>
                     <tr>
@@ -285,13 +139,25 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-
     </div>
 
     <script>
-        // --- 1. SHARED VARIABLES ---
-        let savedEvents = JSON.parse(localStorage.getItem('promotionEvents')) || [];
-        let registrations = JSON.parse(localStorage.getItem('porsimData')) || [];
+        // ==========================================
+        // ⚠️ REPLACE THESE WITH YOUR SUPABASE KEYS ⚠️
+        // ==========================================
+        const SUPABASE_URL = https://qrbrtmuwkykdvgxawuiw.supabase.co;
+        const SUPABASE_KEY = sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE;
+        
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ==========================================
+        // VARIABLES
+        // ==========================================
+        let savedEvents = [];
+        let registrations = [];
+        let calendar;
+        let sortAscending = true;
 
         const form = document.getElementById('regForm');
         const tableBody = document.getElementById('tableBody');
@@ -302,10 +168,6 @@
         const departmentInput = document.getElementById('department');
         const newEventNameInput = document.getElementById('newEventName');
 
-        var calendar; 
-        let sortAscending = true; 
-
-        // --- 2. GENERATE DEPARTMENT 31 TO 55 ---
         for (let i = 31; i <= 55; i++) {
             let option = document.createElement('option');
             option.value = "Dept " + i;
@@ -313,7 +175,6 @@
             departmentInput.appendChild(option);
         }
 
-        // --- 3. CALCULATE DURATION ---
         function calculateDuration() {
             const start = startDateInput.value;
             const end = endDateInput.value;
@@ -331,26 +192,46 @@
                 durationInput.value = "";
             }
         }
-
         startDateInput.addEventListener('change', calculateDuration);
         endDateInput.addEventListener('change', calculateDuration);
 
-        // --- 4. FORM SUBMISSION ---
-        form.addEventListener('submit', function(e) {
+        // ==========================================
+        // FETCH DATA FROM SUPABASE
+        // ==========================================
+        async function loadData() {
+            // Get Events
+            const { data: eventData, error: eventError } = await db.from('events').select('*');
+            if (!eventError) {
+                savedEvents = eventData;
+                if(calendar) {
+                    calendar.removeAllEvents();
+                    savedEvents.forEach(e => {
+                        calendar.addEvent({ id: e.id, title: e.title, start: e.start_date, end: e.end_date, color: '#9b59b6' });
+                    });
+                }
+            } else {
+                console.error("Error loading events:", eventError);
+            }
+
+            // Get Registrations
+            const { data: regData, error: regError } = await db.from('registrations').select('*').order('created_at', { ascending: false });
+            if (!regError) {
+                registrations = regData;
+                renderDashboard();
+            } else {
+                console.error("Error loading registrations:", regError);
+            }
+        }
+
+        // ==========================================
+        // FORM SUBMISSION
+        // ==========================================
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            if(!departmentInput.value) {
-                alert("Please select a department.");
-                return;
-            }
-            if (!newEventNameInput.value.trim()) {
-                alert("Please enter a name for the new event.");
-                return;
-            }
-            if (new Date(endDateInput.value) < new Date(startDateInput.value)) {
-                alert("End Date cannot be before Start Date!");
-                return;
-            }
+            if(!departmentInput.value) { alert("Please select a department."); return; }
+            if (!newEventNameInput.value.trim()) { alert("Please enter an event name."); return; }
+            if (new Date(endDateInput.value) < new Date(startDateInput.value)) { alert("End Date cannot be before Start Date!"); return; }
 
             const eventName = newEventNameInput.value.trim();
             const startVal = startDateInput.value;
@@ -363,50 +244,29 @@
             let existingEvent = savedEvents.find(e => e.title.toLowerCase() === eventName.toLowerCase());
             
             if (existingEvent) {
-                existingEvent.start = startVal;
-                existingEvent.end = endString;
-                localStorage.setItem('promotionEvents', JSON.stringify(savedEvents));
-                
-                if(calendar) {
-                    calendar.getEvents().forEach(ev => {
-                        if(ev.title.toLowerCase() === eventName.toLowerCase()) {
-                            ev.setDates(startVal, endString);
-                        }
-                    });
-                }
+                await db.from('events').update({ start_date: startVal, end_date: endString }).eq('id', existingEvent.id);
             } else {
-                let newEvent = {
-                    title: eventName,
-                    start: startVal,
-                    end: endString,
-                    color: '#9b59b6'
-                };
-                savedEvents.push(newEvent);
-                localStorage.setItem('promotionEvents', JSON.stringify(savedEvents));
-                if(calendar) calendar.addEvent(newEvent);
+                await db.from('events').insert([{ title: eventName, start_date: startVal, end_date: endString }]);
             }
 
-            const newEntry = {
-                id: Date.now(), 
-                department: departmentInput.value, 
-                event: eventName, 
+            await db.from('registrations').insert([{
+                department: departmentInput.value,
+                event_title: eventName,
                 duration: durationInput.value,
                 status: "Active",
                 notes: document.getElementById('notes').value
-            };
-            
-            registrations.push(newEntry);
-            localStorage.setItem('porsimData', JSON.stringify(registrations)); 
-            renderDashboard();
-            
+            }]);
+
             form.reset();
             durationInput.value = "";
+            await loadData(); 
         });
 
-        // --- 5. RENDER DASHBOARD ---
+        // ==========================================
+        // RENDER DASHBOARD
+        // ==========================================
         function renderDashboard(dataToRender = registrations) {
             tableBody.innerHTML = '';
-            
             document.getElementById('totalRegs').innerText = dataToRender.length;
             
             let totalDaysCount = 0;
@@ -426,7 +286,7 @@
             dataToRender.forEach(item => {
                 let row = `<tr>
                     <td><strong>${item.department}</strong></td>
-                    <td>${item.event}</td>
+                    <td>${item.event_title}</td>
                     <td>${item.duration || 'N/A'}</td>
                     <td><span class="status-active">${item.status}</span></td>
                     <td>${item.notes || '-'}</td>
@@ -436,12 +296,14 @@
             });
         }
 
-        // --- 6. SEARCH, SORT, DELETE ---
+        // ==========================================
+        // SEARCH, SORT, DELETE
+        // ==========================================
         searchBar.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const filtered = registrations.filter(item => 
                 item.department.toLowerCase().includes(searchTerm) ||
-                item.event.toLowerCase().includes(searchTerm) ||
+                item.event_title.toLowerCase().includes(searchTerm) ||
                 (item.notes && item.notes.toLowerCase().includes(searchTerm))
             );
             renderDashboard(filtered);
@@ -456,9 +318,8 @@
                     let numB = parseInt(b.department.replace('Dept ', '')) || 0;
                     return sortAscending ? numA - numB : numB - numA;
                 }
-                if (columnIndex === 1) { valA = a.event.toLowerCase(); valB = b.event.toLowerCase(); }
+                if (columnIndex === 1) { valA = a.event_title.toLowerCase(); valB = b.event_title.toLowerCase(); }
                 if (columnIndex === 2) { valA = parseInt(a.duration) || 0; valB = parseInt(b.duration) || 0; }
-
                 if (valA < valB) return sortAscending ? -1 : 1;
                 if (valA > valB) return sortAscending ? 1 : -1;
                 return 0;
@@ -466,41 +327,40 @@
             renderDashboard();
         }
 
-        function deleteRegistration(id) {
+        async function deleteRegistration(id) {
             if(confirm("Are you sure you want to delete this registration?")) {
-                registrations = registrations.filter(item => item.id !== id);
-                localStorage.setItem('porsimData', JSON.stringify(registrations));
-                renderDashboard();
+                await db.from('registrations').delete().eq('id', id);
+                await loadData();
             }
         }
 
-        // --- 7. CALENDAR INITIALIZATION ---
+        async function deleteEvent(id) {
+            if(confirm("Delete this promotion from the calendar?")) {
+                await db.from('events').delete().eq('id', id);
+                await loadData();
+            }
+        }
+
+        // ==========================================
+        // CALENDAR INITIALIZATION
+        // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             if (calendarEl) {
                 calendar = new FullCalendar.Calendar(calendarEl, {
                     initialView: 'dayGridMonth',
-                    headerToolbar: { 
-                        left: 'prev,next', 
-                        center: 'title', 
-                        right: 'today' 
-                    },
+                    headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
                     height: 'auto', 
                     selectable: false, 
                     editable: false, 
-                    events: savedEvents,
+                    events: [],
                     eventClick: function(info) {
-                        let action = confirm("Do you want to DELETE the event: '" + info.event.title + "'?\n\nClick OK to delete, or Cancel to keep it.");
-                        if (action) {
-                            info.event.remove();
-                            savedEvents = savedEvents.filter(e => e.title !== info.event.title || e.startStr !== info.event.startStr);
-                            localStorage.setItem('promotionEvents', JSON.stringify(savedEvents));
-                        }
+                        deleteEvent(info.event.id);
                     }
                 });
                 calendar.render();
             }
-            renderDashboard();
+            loadData();
         });
     </script>
 </body>
