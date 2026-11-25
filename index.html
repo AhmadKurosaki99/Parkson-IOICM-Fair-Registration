@@ -232,8 +232,9 @@
         let registrations = [];
         let calendar;
         let sortAscending = true;
+        let currentSalesData = [];
 
-        function switchTab(tabId, e) {
+        window.switchTab = function(tabId, e) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
@@ -245,8 +246,143 @@
             } else if (tabId === 'registration') {
                 if(calendar) calendar.render(); 
             }
-        }
+        };
 
+        window.loadSalesEventsDropdown = function() {
+            const select = document.getElementById('salesEventSelect');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">Select an Event...</option>';
+            savedEvents.forEach(e => {
+                let opt = document.createElement('option');
+                opt.value = e.title;
+                opt.text = e.title;
+                select.appendChild(opt);
+            });
+            if(currentVal) select.value = currentVal;
+        };
+
+        window.loadSalesGrid = async function() {
+            const eventTitle = document.getElementById('salesEventSelect').value;
+            if(!eventTitle) {
+                document.getElementById('salesGridHead').innerHTML = '';
+                document.getElementById('salesGridBody').innerHTML = '';
+                return;
+            }
+
+            const event = savedEvents.find(e => e.title === eventTitle);
+            if(!event) return;
+
+            const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
+            if(error) { console.error(error); return; }
+            currentSalesData = salesData || [];
+
+            let start = new Date(event.start_date);
+            let end = new Date(event.end_date);
+            end.setDate(end.getDate() - 1); 
+
+            let dates = [];
+            let current = new Date(start);
+            while (current <= end) {
+                dates.push(new Date(current));
+                current.setDate(current.getDate() + 1);
+            }
+
+            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
+            if(brands.length === 0) brands = ["SKU Description"]; 
+
+            let headHtml = `<tr>
+                <th>Date</th>
+                <th>Day</th>`;
+            
+            brands.forEach(b => {
+                headHtml += `<th>SKU (<input type="text" value="${b === 'SKU Description' ? '' : b}" placeholder="Type SKU here..." onchange="window.updateSkuName('${b}', this.value, '${eventTitle}')" style="border: none; background: transparent; text-align: center; font-weight: 700; width: 100%; outline: none; padding: 0; margin: 0; font-size: 12px;"></th>`);
+            });
+
+            headHtml += `<th>Daily Total (RM)</th><th>POS Number</th></tr>`;
+            document.getElementById('salesGridHead').innerHTML = headHtml;
+
+            let bodyHtml = '';
+            let brandTotals = {};
+            brands.forEach(b => brandTotals[b] = 0);
+            let grandTotal = 0;
+
+            dates.forEach(d => {
+                let dayStr = String(d.getDate()).padStart(2, '0');
+                let monthStr = String(d.getMonth() + 1).padStart(2, '0');
+                let yearStr = d.getFullYear();
+                let displayDate = `${dayStr}/${monthStr}/${yearStr}`;
+                
+                let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+                let dateStr = d.toISOString().split('T')[0];
+                
+                let rowTotal = 0;
+                let posRef = '-';
+
+                bodyHtml += `<tr><td>${displayDate}</td><td>${dayName}</td>`;
+                
+                brands.forEach(b => {
+                    let entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
+                    let val = entry ? entry.amount : 0;
+                    if(entry && entry.pos_ref) posRef = entry.pos_ref;
+                    
+                    rowTotal += val;
+                    brandTotals[b] += val;
+
+                    bodyHtml += `<td><input type="number" class="grid-input" value="${val > 0 ? val.toFixed(2) : ''}" placeholder="0.00" onchange="window.updateCell('${dateStr}', '${b}', this.value, '${eventTitle}')"></td>`;
+                });
+
+                grandTotal += rowTotal;
+                bodyHtml += `<td><input type="number" class="grid-input readonly" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly placeholder="0.00"></td>`;
+                bodyHtml += `<td><input type="text" class="grid-input" value="${posRef}" onchange="window.updatePosRef('${dateStr}', '${posRef}', this.value, '${eventTitle}')"></td>`;
+                bodyHtml += `</tr>`;
+            });
+
+            bodyHtml += `<tr class="total-row"><td colspan="2">TOTAL</td>`;
+            brands.forEach(b => {
+                bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`;
+            });
+            bodyHtml += `<td>RM ${grandTotal.toFixed(2)}</td><td></td></tr>`;
+
+            document.getElementById('salesGridBody').innerHTML = bodyHtml;
+        };
+
+        window.updateSkuName = async function(oldName, newName, eventTitle) {
+            if(!newName.trim()) return;
+            if(oldName === 'SKU Description') {
+                await db.from('fair_daily_sales').insert([{
+                    event_title: eventTitle, department: "Dept 44", sale_date: savedEvents.find(e => e.title === eventTitle).start_date, brand_name: newName.trim(), amount: 0
+                }]);
+            } else {
+                await db.from('fair_daily_sales').update({ brand_name: newName.trim() }).eq('event_title', eventTitle).eq('brand_name', oldName);
+            }
+            window.loadSalesGrid();
+        };
+
+        window.updateCell = async function(dateStr, brandName, value, eventTitle) {
+            const numValue = parseFloat(value) || 0;
+            const existing = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === brandName);
+
+            if(existing) {
+                await db.from('fair_daily_sales').update({ amount: numValue }).eq('id', existing.id);
+            } else if (numValue > 0) {
+                await db.from('fair_daily_sales').insert([{
+                    event_title: eventTitle,
+                    department: "Dept 44", 
+                    sale_date: dateStr,
+                    brand_name: brandName,
+                    amount: numValue,
+                    pos_ref: "327" 
+                }]);
+            }
+            window.loadSalesGrid(); 
+        };
+
+        window.updatePosRef = async function(dateStr, oldRef, newRef, eventTitle) {
+            await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
+            window.loadSalesGrid();
+        };
+
+        // --- STANDARD FUNCTIONS ---
         const form = document.getElementById('regForm');
         const tableBody = document.getElementById('tableBody');
         const searchBar = document.getElementById('searchBar');
@@ -385,7 +521,7 @@
         }
 
         async function deleteEvent(id) {
-            if(confirm("Delete this promotion from the calendar?")) { await db.from('events').delete().eq('id', id); await loadData(); loadSalesEventsDropdown(); }
+            if(confirm("Delete this promotion from the calendar?")) { await db.from('events').delete().eq('id', id); await loadData(); window.loadSalesEventsDropdown(); }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -401,142 +537,6 @@
             }
             loadData();
         });
-
-        let currentSalesData = [];
-
-        function loadSalesEventsDropdown() {
-            const select = document.getElementById('salesEventSelect');
-            const currentVal = select.value;
-            select.innerHTML = '<option value="">Select an Event...</option>';
-            savedEvents.forEach(e => {
-                let opt = document.createElement('option');
-                opt.value = e.title;
-                opt.text = e.title;
-                select.appendChild(opt);
-            });
-            if(currentVal) select.value = currentVal;
-        }
-
-        async function loadSalesGrid() {
-            const eventTitle = document.getElementById('salesEventSelect').value;
-            if(!eventTitle) {
-                document.getElementById('salesGridHead').innerHTML = '';
-                document.getElementById('salesGridBody').innerHTML = '';
-                return;
-            }
-
-            const event = savedEvents.find(e => e.title === eventTitle);
-            if(!event) return;
-
-            const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
-            if(error) { console.error(error); return; }
-            currentSalesData = salesData || [];
-
-            let start = new Date(event.start_date);
-            let end = new Date(event.end_date);
-            end.setDate(end.getDate() - 1); 
-
-            let dates = [];
-            let current = new Date(start);
-            while (current <= end) {
-                dates.push(new Date(current));
-                current.setDate(current.getDate() + 1);
-            }
-
-            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
-            if(brands.length === 0) brands = ["SKU Description"]; 
-
-            let headHtml = `<tr>
-                <th>Date</th>
-                <th>Day</th>`;
-            
-            brands.forEach(b => {
-                headHtml += `<th>SKU (<input type="text" value="${b === 'SKU Description' ? '' : b}" placeholder="Type SKU here..." onchange="updateSkuName('${b}', this.value, '${eventTitle}')" style="border: none; background: transparent; text-align: center; font-weight: 700; width: 100%; outline: none; padding: 0; margin: 0; font-size: 12px;"></th>`);
-            });
-
-            headHtml += `<th>Daily Total (RM)</th><th>POS Number</th></tr>`;
-            document.getElementById('salesGridHead').innerHTML = headHtml;
-
-            let bodyHtml = '';
-            let brandTotals = {};
-            brands.forEach(b => brandTotals[b] = 0);
-            let grandTotal = 0;
-
-            dates.forEach(d => {
-                let dayStr = String(d.getDate()).padStart(2, '0');
-                let monthStr = String(d.getMonth() + 1).padStart(2, '0');
-                let yearStr = d.getFullYear();
-                let displayDate = `${dayStr}/${monthStr}/${yearStr}`;
-                
-                let dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-                let dateStr = d.toISOString().split('T')[0];
-                
-                let rowTotal = 0;
-                let posRef = '-';
-
-                bodyHtml += `<tr><td>${displayDate}</td><td>${dayName}</td>`;
-                
-                brands.forEach(b => {
-                    let entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
-                    let val = entry ? entry.amount : 0;
-                    if(entry && entry.pos_ref) posRef = entry.pos_ref;
-                    
-                    rowTotal += val;
-                    brandTotals[b] += val;
-
-                    bodyHtml += `<td><input type="number" class="grid-input" value="${val > 0 ? val.toFixed(2) : ''}" placeholder="0.00" onchange="updateCell('${dateStr}', '${b}', this.value, '${eventTitle}')"></td>`;
-                });
-
-                grandTotal += rowTotal;
-                bodyHtml += `<td><input type="number" class="grid-input readonly" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly placeholder="0.00"></td>`;
-                bodyHtml += `<td><input type="text" class="grid-input" value="${posRef}" onchange="updatePosRef('${dateStr}', '${posRef}', this.value, '${eventTitle}')"></td>`;
-                bodyHtml += `</tr>`;
-            });
-
-            bodyHtml += `<tr class="total-row"><td colspan="2">TOTAL</td>`;
-            brands.forEach(b => {
-                bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`;
-            });
-            bodyHtml += `<td>RM ${grandTotal.toFixed(2)}</td><td></td></tr>`;
-
-            document.getElementById('salesGridBody').innerHTML = bodyHtml;
-        }
-
-        async function updateSkuName(oldName, newName, eventTitle) {
-            if(!newName.trim()) return;
-            if(oldName === 'SKU Description') {
-                await db.from('fair_daily_sales').insert([{
-                    event_title: eventTitle, department: "Dept 44", sale_date: savedEvents.find(e => e.title === eventTitle).start_date, brand_name: newName.trim(), amount: 0
-                }]);
-            } else {
-                await db.from('fair_daily_sales').update({ brand_name: newName.trim() }).eq('event_title', eventTitle).eq('brand_name', oldName);
-            }
-            loadSalesGrid();
-        }
-
-        async function updateCell(dateStr, brandName, value, eventTitle) {
-            const numValue = parseFloat(value) || 0;
-            const existing = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === brandName);
-
-            if(existing) {
-                await db.from('fair_daily_sales').update({ amount: numValue }).eq('id', existing.id);
-            } else if (numValue > 0) {
-                await db.from('fair_daily_sales').insert([{
-                    event_title: eventTitle,
-                    department: "Dept 44", 
-                    sale_date: dateStr,
-                    brand_name: brandName,
-                    amount: numValue,
-                    pos_ref: "327" 
-                }]);
-            }
-            loadSalesGrid(); 
-        }
-
-        async function updatePosRef(dateStr, oldRef, newRef, eventTitle) {
-            await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
-            loadSalesGrid();
-        }
     </script>
 </body>
 </html>
