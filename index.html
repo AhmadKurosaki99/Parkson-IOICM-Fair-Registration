@@ -379,17 +379,23 @@
             renderDashboard();
         }
 
-        // --- UPDATED DELETE FUNCTION ---
+        // --- SMART DELETE FUNCTION ---
         async function deleteRegistration(id, eventTitle) {
             if(confirm("Delete this registration?")) { 
-                // 1. Delete the registration from the database
+                
+                // 1. How many registrations are left for this event?
+                // (We subtract 1 because we are about to delete this one)
+                let remainingRegistrations = registrations.filter(r => r.event_title === eventTitle).length - 1;
+
+                // 2. Delete the registration
                 await db.from('registrations').delete().eq('id', id); 
                 
-                // 2. Also delete the matching event from the events database
-                // (This ensures the calendar is updated too)
-                await db.from('events').delete().eq('title', eventTitle);
+                // 3. If this was the LAST registration for this event, delete the event from the calendar too!
+                if (remainingRegistrations <= 0) {
+                    await db.from('events').delete().eq('title', eventTitle);
+                }
 
-                // 3. Reload the data to update both the table and the calendar
+                // 4. Reload everything
                 await loadData(); 
                 loadSalesEventsDropdown();
             }
