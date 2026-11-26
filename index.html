@@ -135,8 +135,8 @@
         
         .btn-export { background: #27ae60; }
         .btn-export:hover { background: #219653; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
-        .btn-fill { background: #f39c12; }
-        .btn-fill:hover { background: #e67e22; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); }
+        .btn-print { background: #8e44ad; }
+        .btn-print:hover { background: #732d91; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3); }
         .btn-zero { background: #7f8c8d; }
         .btn-zero:hover { background: #95a5a6; box-shadow: 0 4px 10px rgba(127, 140, 141, 0.3); }
         
@@ -230,7 +230,7 @@
         .toast.error { background: #e74c3c; }
         .empty-state { text-align: center; color: #999; padding: 40px 20px; font-style: italic; }
 
-        /* --- MOBILE CARD VIEW STYLES (IDEA 20) --- */
+        /* --- MOBILE CARD VIEW STYLES --- */
         .mobile-card-view { display: none; }
 
         @media (max-width: 1024px) {
@@ -253,7 +253,6 @@
             .card { padding: 15px; }
             .stat-next-event h3, .stat-health-title { font-size: 18px !important; }
 
-            /* Hide desktop grid, show mobile card view */
             .sales-grid-wrapper { display: none; }
             .mobile-card-view { display: block; margin-top: 15px; }
             
@@ -271,6 +270,35 @@
             .mobile-pos-ref { margin-top: 10px; padding: 0 15px 15px 15px; }
             .mobile-pos-ref label { font-size: 11px; margin-top: 0; margin-bottom: 5px; }
             .mobile-pos-ref input { margin: 0; padding: 8px; font-size: 13px; }
+        }
+
+        /* --- PRINT STYLES (IDEA 2) --- */
+        @media print {
+            body { background: white; font-size: 12px; }
+            header, .tabs, .quick-nav-btn, .sales-header-bar .sales-add-brand, .sales-actions, .mobile-card-view { display: none !important; }
+            
+            .container { padding: 0; margin: 0; max-width: 100%; display: block; }
+            .card { box-shadow: none; border: none; padding: 0; margin: 0; width: 100% !important; }
+            
+            h2 { font-size: 18px; margin-bottom: 10px; }
+            .sales-event-selector { margin-bottom: 10px; font-size: 14px; font-weight: bold; }
+            .sales-event-selector select { border: none; background: transparent; font-size: 16px; font-weight: bold; padding: 0; margin: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+            
+            .sales-grid-wrapper { max-height: none; overflow: visible; border: 1px solid #000; }
+            .sales-table th, .sales-table td { border: 1px solid #000 !important; color: #000 !important; background: white !important; }
+            .sales-table th { background: #f0f0f0 !important; font-weight: bold; }
+            
+            .grid-input { border: none !important; background: transparent !important; box-shadow: none !important; text-align: right; width: 100%; font-size: 12px; padding: 4px; }
+            .grid-input::-webkit-outer-spin-button, .grid-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+            .grid-input[type=number] { -moz-appearance: textfield; }
+            
+            .brand-pill { background: transparent !important; padding: 0 !important; color: #000 !important; }
+            .btn-del-brand { display: none !important; }
+            
+            .col-daily-total { background: #f9f9f9 !important; font-weight: bold; }
+            .total-row td { background: #e0e0e0 !important; font-weight: bold; border-top: 2px solid #000 !important; position: static; }
+            
+            .weekend-row td, .today-row td { background: white !important; color: #000 !important; }
         }
     </style>
 </head>
@@ -382,7 +410,7 @@
                         <button id="addBrandBtn">+ Add</button>
                     </div>
                     <div class="sales-actions">
-                        <button id="autoFillBtn" class="btn-action btn-fill" title="Copy the first entered number to all empty days for that brand">✨ Auto-Fill</button>
+                        <button id="printBtn" class="btn-action btn-print" title="Print this report">🖨️ Print PDF</button>
                         <button id="zeroFillBtn" class="btn-action btn-zero" title="Fill all completely empty cells with 0">0️⃣ Zero-Out</button>
                         <button id="exportBtn" class="btn-action btn-export">⬇ Export</button>
                         <div class="grand-total-card">
@@ -400,7 +428,7 @@
                     </table>
                 </div>
 
-                <!-- MOBILE VIEW (IDEA 20) -->
+                <!-- MOBILE VIEW -->
                 <div class="mobile-card-view" id="mobileSalesGrid">
                     <!-- Rendered dynamically via JS -->
                 </div>
@@ -1319,53 +1347,7 @@
             } catch (err) { showError('Failed to delete brand: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
-        document.getElementById('autoFillBtn').addEventListener('click', async () => {
-            if (!currentSalesEvent || currentSalesData.length === 0) { showError("No data to auto-fill."); return; }
-            if (!confirm('This will copy the first entered number to all EMPTY days for each brand. Proceed?')) return;
-
-            const eventTitle = currentSalesEvent.title;
-            const start = parseLocalDate(currentSalesEvent.start_date);
-            const endInc = parseLocalDate(currentSalesEvent.end_date);
-            endInc.setDate(endInc.getDate() - 1);
-
-            const dates = [];
-            let current = new Date(start);
-            while (current <= endInc) {
-                dates.push(formatLocalDate(current));
-                current.setDate(current.getDate() + 1);
-            }
-
-            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
-            let inserts = [];
-
-            brands.forEach(b => {
-                const firstEntry = dates.map(d => currentSalesData.find(s => s.sale_date === d && s.brand_name === b)).find(s => s && s.amount > 0);
-                
-                if (firstEntry) {
-                    const fillAmount = firstEntry.amount;
-                    dates.forEach(d => {
-                        const exists = currentSalesData.find(s => s.sale_date === d && s.brand_name === b);
-                        if (!exists) {
-                            inserts.push({
-                                event_title: eventTitle, department: DEFAULT_DEPARTMENT, sale_date: d, brand_name: b, amount: fillAmount, pos_ref: DEFAULT_POS_REF
-                            });
-                        }
-                    });
-                }
-            });
-
-            if (inserts.length === 0) { toast("No empty days found to fill."); return; }
-
-            try {
-                const { error } = await db.from('fair_daily_sales').insert(inserts);
-                if (error) throw error;
-                toast(`Auto-filled ${inserts.length} empty days!`);
-                await loadSalesGrid();
-                await loadData(); // Refresh health check
-            } catch (err) { showError('Auto-fill failed: ' + (err.message || 'unknown error')); console.error(err); }
-        });
-
-        // --- ZERO OUT EMPTY (IDEA 18) ---
+        // --- ZERO OUT EMPTY ---
         document.getElementById('zeroFillBtn').addEventListener('click', async () => {
             if (!currentSalesEvent || currentSalesData.length === 0) { showError("No data to process."); return; }
             if (!confirm('This will fill any COMPLETELY EMPTY cells in the grid with a 0. Proceed?')) return;
@@ -1405,6 +1387,12 @@
                 await loadSalesGrid();
                 await loadData(); // Refresh health check
             } catch (err) { showError('Zero-out failed: ' + (err.message || 'unknown error')); console.error(err); }
+        });
+
+        // --- PRINT PDF (IDEA 2) ---
+        document.getElementById('printBtn').addEventListener('click', () => {
+            if (!currentSalesEvent) { showError('Please select an event first.'); return; }
+            window.print();
         });
 
         document.getElementById('exportBtn').addEventListener('click', () => {
