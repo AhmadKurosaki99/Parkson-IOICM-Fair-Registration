@@ -272,31 +272,47 @@
             .mobile-pos-ref input { margin: 0; padding: 8px; font-size: 13px; }
         }
 
-        /* --- PRINT STYLES (IDEA 2) --- */
+        /* --- PRINT STYLES --- */
         @media print {
-            body { background: white; font-size: 12px; }
+            /* Hide everything except the table */
+            body { background: white !important; font-size: 12px !important; margin: 0 !important; padding: 0 !important; }
             header, .tabs, .quick-nav-btn, .sales-header-bar .sales-add-brand, .sales-actions, .mobile-card-view { display: none !important; }
             
-            .container { padding: 0; margin: 0; max-width: 100%; display: block; }
-            .card { box-shadow: none; border: none; padding: 0; margin: 0; width: 100% !important; }
+            .container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; display: block !important; }
+            .card { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; border-top: none !important; }
             
-            h2 { font-size: 18px; margin-bottom: 10px; }
-            .sales-event-selector { margin-bottom: 10px; font-size: 14px; font-weight: bold; }
-            .sales-event-selector select { border: none; background: transparent; font-size: 16px; font-weight: bold; padding: 0; margin: 0; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+            /* Style the header for printing */
+            h2 { font-size: 18px !important; margin-bottom: 5px !important; border-bottom: 1px solid #000 !important; padding-bottom: 5px !important; }
+            .sales-event-selector { margin-bottom: 15px !important; display: block !important; }
+            .sales-event-selector label { font-size: 14px !important; }
+            .sales-event-selector select { border: none !important; background: transparent !important; font-size: 16px !important; font-weight: bold !important; padding: 0 !important; margin: 0 !important; -webkit-appearance: none; -moz-appearance: none; appearance: none; color: #000 !important; }
+
+            /* FORCE THE TABLE TO BE VISIBLE */
+            .sales-grid-wrapper { 
+                display: block !important;
+                max-height: none !important; 
+                overflow: visible !important; 
+                border: 1px solid #000 !important;
+            }
             
-            .sales-grid-wrapper { max-height: none; overflow: visible; border: 1px solid #000; }
-            .sales-table th, .sales-table td { border: 1px solid #000 !important; color: #000 !important; background: white !important; }
-            .sales-table th { background: #f0f0f0 !important; font-weight: bold; }
+            .sales-table { width: 100% !important; border-collapse: collapse !important; }
+            .sales-table th, .sales-table td { border: 1px solid #000 !important; color: #000 !important; background: white !important; padding: 6px !important; }
+            .sales-table th { background: #eee !important; font-weight: bold !important; }
             
-            .grid-input { border: none !important; background: transparent !important; box-shadow: none !important; text-align: right; width: 100%; font-size: 12px; padding: 4px; }
+            /* Remove Sticky Positioning for Print */
+            .sales-table th, .sales-table td, .sales-table td:first-child, .sales-table th:first-child, .sales-table td:nth-child(2), .sales-table th:nth-child(2) { position: static !important; }
+
+            /* Clean up inputs */
+            .grid-input { border: none !important; background: transparent !important; box-shadow: none !important; text-align: right !important; width: 100% !important; font-size: 12px !important; padding: 0 !important; color: #000 !important; }
             .grid-input::-webkit-outer-spin-button, .grid-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
             .grid-input[type=number] { -moz-appearance: textfield; }
             
-            .brand-pill { background: transparent !important; padding: 0 !important; color: #000 !important; }
+            .brand-pill { background: transparent !important; padding: 0 !important; color: #000 !important; font-weight: bold !important; }
             .btn-del-brand { display: none !important; }
             
-            .col-daily-total { background: #f9f9f9 !important; font-weight: bold; }
-            .total-row td { background: #e0e0e0 !important; font-weight: bold; border-top: 2px solid #000 !important; position: static; }
+            /* Table Colors */
+            .col-daily-total { background: #f9f9f9 !important; font-weight: bold !important; }
+            .total-row td { background: #e0e0e0 !important; font-weight: bold !important; border-top: 2px solid #000 !important; position: static !important; color: #000 !important; }
             
             .weekend-row td, .today-row td { background: white !important; color: #000 !important; }
         }
@@ -1389,7 +1405,7 @@
             } catch (err) { showError('Zero-out failed: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
-        // --- PRINT PDF (IDEA 2) ---
+        // --- PRINT PDF ---
         document.getElementById('printBtn').addEventListener('click', () => {
             if (!currentSalesEvent) { showError('Please select an event first.'); return; }
             window.print();
