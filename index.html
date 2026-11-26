@@ -359,7 +359,6 @@
             display: none;
         }
 
-        /* Sidebar bottom: user + version + toggle */
         .sidebar-bottom {
             border-top: 1px solid var(--sidebar-border);
             padding: 12px;
@@ -497,7 +496,6 @@
             transform: rotate(180deg);
         }
 
-        /* Tooltip for collapsed mode */
         .sidebar.collapsed .sidebar-nav-item {
             position: relative;
         }
@@ -1335,7 +1333,6 @@
 <body data-active-tab="registration">
 
     <div class="app-shell">
-        <!-- ==================== SIDEBAR ==================== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">P</div>
@@ -1409,10 +1406,8 @@
             </div>
         </aside>
 
-        <!-- Drawer overlay for mobile -->
         <div class="drawer-overlay" id="drawerOverlay"></div>
 
-        <!-- ==================== MAIN AREA ==================== -->
         <div class="main-area" id="mainArea">
             <div class="topbar">
                 <div class="topbar-left">
@@ -1430,8 +1425,7 @@
                 </div>
             </div>
 
-            <div class="content-area">
-                <!-- TAB 1: REGISTRATION -->
+            <div class="content-area" id="contentArea">
                 <div id="tab-registration" class="tab-content active">
                     <div class="container">
                         <div class="card calendar-card">
@@ -1500,7 +1494,6 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: SALES TRACKER -->
                 <div id="tab-sales" class="tab-content">
                     <div class="container" style="flex-direction: column;">
                         <div class="card" style="width: 100%; box-sizing: border-box;">
@@ -1540,7 +1533,6 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: REPORTS & ANALYTICS -->
                 <div id="tab-reports" class="tab-content">
                     <div class="container" style="flex-direction: column;">
                         <div class="reports-controls">
@@ -1588,7 +1580,6 @@
         </div>
     </div>
 
-    <!-- SETTINGS MODAL -->
     <div class="modal-overlay" id="settingsModal">
         <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
             <div class="settings-modal-header">
@@ -2092,11 +2083,19 @@
             document.getElementById('topbarTitle').textContent = titleMap[tabId] || '';
             document.body.setAttribute('data-active-tab', tabId);
 
+            // ALWAYS scroll to top when switching sections
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            const contentArea = document.getElementById('contentArea');
+            if (contentArea) contentArea.scrollTop = 0;
+            const mainArea = document.getElementById('mainArea');
+            if (mainArea) mainArea.scrollTop = 0;
+            const sidebarNav = document.querySelector('.sidebar-nav');
+            if (sidebarNav) sidebarNav.scrollTop = 0;
+
             if (tabId === 'sales') { loadSalesEventsDropdown('salesEventSelect'); } 
             else if (tabId === 'reports') { loadSalesEventsDropdown('reportsEventSelect'); }
             else if (tabId === 'registration' && calendar) { calendar.render(); }
 
-            // Close mobile drawer if open
             closeMobileDrawer();
         }
 
@@ -2482,7 +2481,6 @@
             renderDashboard(target);
         }
 
-        // ---------- SIDEBAR LOGIC ----------
         const sidebar = document.getElementById('sidebar');
         const mainArea = document.getElementById('mainArea');
         const sidebarToggle = document.getElementById('sidebarToggle');
@@ -3229,9 +3227,6 @@
             });
         }
 
-        // ============================================================
-        // SETTINGS MODAL LOGIC
-        // ============================================================
         const settingsModal = document.getElementById('settingsModal');
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsCloseBtn = document.getElementById('settingsCloseBtn');
