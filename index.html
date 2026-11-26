@@ -26,6 +26,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInRow { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes spin { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-dark); animation: fadeIn 0.6s ease-out; }
 
@@ -123,7 +124,7 @@
         .btn-cleanup { background: #c0392b; color: white; padding: 8px 15px; font-size: 12px; width: auto; margin-top: 10px; margin-bottom: 10px; display: block; }
         .btn-cleanup:hover { background: #a93226; box-shadow: 0 4px 10px rgba(192, 57, 43, 0.3); }
 
-        /* --- REVAMPED SALES TRACKER UI --- */
+        /* --- SALES TRACKER UI --- */
         .sales-header-bar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #eee; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
         
         .sales-event-selector { flex: 1; min-width: 250px; }
@@ -185,6 +186,30 @@
         .btn-del-brand { background: none; border: none; color: #94a3b8; font-weight: bold; cursor: pointer; padding: 0; font-size: 14px; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .btn-del-brand:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
         .brand-rename-input { width: 80px; padding: 2px 4px; font-size: 12px; font-weight: bold; text-align: center; border: 1px solid var(--parkson-green); border-radius: 4px; margin: 0; }
+
+        /* --- CELL STATUS INDICATORS --- */
+        .grid-input-wrapper { position: relative; display: inline-block; }
+        .grid-input-wrapper .grid-input { padding-right: 20px; }
+        .cell-status { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 11px; pointer-events: none; transition: opacity 0.3s ease; line-height: 1; }
+        .cell-status.pending { color: var(--warning-orange); }
+        .cell-status.saving  { color: var(--edit-blue); animation: spin 0.8s linear infinite; }
+        .cell-status.saved   { color: #27ae60; opacity: 1; }
+        .cell-status.failed  { color: #e74c3c; }
+        .cell-status.hidden  { opacity: 0; }
+
+        /* --- SAVE STATUS BAR --- */
+        .save-status-bar { display: none; align-items: center; gap: 12px; padding: 8px 14px; background: #f8f9fa; border-radius: 4px; font-size: 12px; font-weight: 600; margin-bottom: 10px; border-left: 3px solid transparent; flex-wrap: wrap; }
+        .save-status-bar.visible { display: flex; }
+        .save-status-bar.has-failed { border-left-color: #e74c3c; background: #fee; }
+        .save-status-bar.has-pending { border-left-color: var(--warning-orange); background: var(--warning-orange-light); }
+        .save-status-bar.has-saving { border-left-color: var(--edit-blue); background: #eaf4fc; }
+        .save-status-bar .status-item { display: flex; align-items: center; gap: 5px; }
+        .save-status-bar .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .save-status-bar .status-dot.pending { background: var(--warning-orange); }
+        .save-status-bar .status-dot.saving { background: var(--edit-blue); }
+        .save-status-bar .status-dot.failed { background: #e74c3c; }
+        .btn-retry-all { background: #e74c3c; color: white; border: none; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: 700; width: auto; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-retry-all:hover { background: #c0392b; transform: none; box-shadow: none; }
 
         /* --- REPORTS TAB SPECIFIC STYLES --- */
         .reports-controls { background: white; padding: 20px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid #eee; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
@@ -312,7 +337,7 @@
         /* --- PRINT STYLES --- */
         @media print {
             body { background: white !important; font-size: 12px !important; margin: 0 !important; padding: 0 !important; }
-            header, .tabs, .quick-nav-btn, .sales-header-bar .sales-add-brand, .sales-actions, .mobile-card-view { display: none !important; }
+            header, .tabs, .quick-nav-btn, .sales-header-bar .sales-add-brand, .sales-actions, .mobile-card-view, .save-status-bar, .cell-status { display: none !important; }
             
             .container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; display: block !important; }
             .card { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; border-top: none !important; }
@@ -467,6 +492,8 @@
                     </div>
                 </div>
 
+                <div class="save-status-bar" id="saveStatusBar"></div>
+
                 <!-- DESKTOP VIEW -->
                 <div class="sales-grid-wrapper">
                     <table class="sales-table" id="salesGrid">
@@ -567,6 +594,9 @@
 
         let salesGridFirstLoad = true;
         let dashboardFirstLoad = true;
+
+        // Save-state tracking: key = "date|brand", value = { state, value, eventTitle }
+        const cellSaveStates = new Map();
 
         function getTodayMidnight() {
             const d = new Date();
@@ -721,6 +751,102 @@
             document.querySelectorAll('.chart-skeleton-wrapper').forEach(n => n.remove());
         }
 
+        // ---------- CELL SAVE-STATE HELPERS ----------
+        function setCellState(dateStr, brandName, state, value, eventTitle) {
+            const key = `${dateStr}|${brandName}`;
+            if (state === null) {
+                cellSaveStates.delete(key);
+            } else {
+                cellSaveStates.set(key, { state, value, eventTitle });
+            }
+            renderSaveStatusBar();
+            refreshCellIndicators();
+        }
+
+        function getCellState(dateStr, brandName) {
+            return cellSaveStates.get(`${dateStr}|${brandName}`);
+        }
+
+        function refreshCellIndicators() {
+            document.querySelectorAll('.grid-input-wrapper').forEach(wrapper => {
+                const input = wrapper.querySelector('.grid-input');
+                if (!input) return;
+                const { date, brand } = input.dataset;
+                if (!date || !brand) return;
+                const st = getCellState(date, brand);
+                let statusEl = wrapper.querySelector('.cell-status');
+                if (!statusEl) {
+                    statusEl = document.createElement('span');
+                    statusEl.className = 'cell-status';
+                    wrapper.appendChild(statusEl);
+                }
+                if (!st) {
+                    statusEl.className = 'cell-status hidden';
+                    statusEl.textContent = '';
+                } else if (st.state === 'pending') {
+                    statusEl.className = 'cell-status pending';
+                    statusEl.textContent = '•';
+                } else if (st.state === 'saving') {
+                    statusEl.className = 'cell-status saving';
+                    statusEl.textContent = '⟳';
+                } else if (st.state === 'saved') {
+                    statusEl.className = 'cell-status saved';
+                    statusEl.textContent = '✓';
+                } else if (st.state === 'failed') {
+                    statusEl.className = 'cell-status failed';
+                    statusEl.textContent = '!';
+                }
+            });
+        }
+
+        function renderSaveStatusBar() {
+            const bar = document.getElementById('saveStatusBar');
+            if (!bar) return;
+            let pending = 0, saving = 0, failed = 0;
+            cellSaveStates.forEach(st => {
+                if (st.state === 'pending') pending++;
+                else if (st.state === 'saving') saving++;
+                else if (st.state === 'failed') failed++;
+            });
+
+            if (pending === 0 && saving === 0 && failed === 0) {
+                bar.className = 'save-status-bar';
+                bar.innerHTML = '';
+                return;
+            }
+
+            bar.className = 'save-status-bar visible';
+            if (failed > 0) bar.classList.add('has-failed');
+            else if (pending > 0) bar.classList.add('has-pending');
+            else if (saving > 0) bar.classList.add('has-saving');
+
+            let html = '';
+            if (pending > 0) html += `<span class="status-item"><span class="status-dot pending"></span>${pending} pending</span>`;
+            if (saving > 0) html += `<span class="status-item"><span class="status-dot saving"></span>${saving} saving</span>`;
+            if (failed > 0) html += `<span class="status-item"><span class="status-dot failed"></span>${failed} failed</span>`;
+            if (failed > 0) html += `<button class="btn-retry-all" id="retryAllBtn">Retry All</button>`;
+            bar.innerHTML = html;
+
+            const retryBtn = document.getElementById('retryAllBtn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', retryAllFailed);
+            }
+        }
+
+        async function retryAllFailed() {
+            const failedEntries = [];
+            cellSaveStates.forEach((st, key) => {
+                if (st.state === 'failed') {
+                    const [dateStr, brandName] = key.split('|');
+                    failedEntries.push({ dateStr, brandName, value: st.value, eventTitle: st.eventTitle });
+                }
+            });
+            for (const entry of failedEntries) {
+                await performCellSave(entry.dateStr, entry.brandName, entry.value, entry.eventTitle);
+            }
+        }
+
+        // ---------- EVENT STATUS ----------
         function getEventStatusAndProgress(event) {
             if (!event) return { status: 'Unknown', progress: null };
             const today = getTodayMidnight();
@@ -1205,6 +1331,8 @@
         salesEventSelect.addEventListener('change', () => {
             localStorage.setItem(LS_SALES_EVENT, salesEventSelect.value);
             salesGridFirstLoad = true;
+            cellSaveStates.clear();
+            renderSaveStatusBar();
             loadSalesGrid();
         });
 
@@ -1287,7 +1415,7 @@
                     const val = entry ? entry.amount : 0;
                     if (entry && entry.pos_ref) posRef = entry.pos_ref;
                     rowTotal += val; brandTotals[b] += val;
-                    bodyHtml += `<td><input type="number" class="grid-input" data-date="${dateStr}" data-brand="${escapeHtml(b)}" data-event="${escapeHtml(eventTitle)}" value="${val > 0 ? val : ''}" placeholder="0.00"></td>`;
+                    bodyHtml += `<td><div class="grid-input-wrapper"><input type="number" class="grid-input" data-date="${dateStr}" data-brand="${escapeHtml(b)}" data-event="${escapeHtml(eventTitle)}" value="${val > 0 ? val : ''}" placeholder="0.00"><span class="cell-status hidden"></span></div></td>`;
                 });
 
                 grandTotal += rowTotal;
@@ -1328,6 +1456,9 @@
             mobileEl.innerHTML = mobileHtml;
 
             floatingTotalEl.textContent = `RM ${grandTotal.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // Re-apply any pending/saving/failed states that survived the re-render
+            refreshCellIndicators();
         }
 
         window.enableRenameBrand = function(oldBrand) {
@@ -1402,7 +1533,9 @@
             const target = e.target;
             if (target.matches('.grid-input[data-brand]')) {
                 const { date, brand, event } = target.dataset;
-                debouncedSave(`cell-${date}-${brand}`, () => updateCell(date, brand, target.value, event));
+                const val = target.value;
+                setCellState(date, brand, 'pending', val, event);
+                debouncedSave(`cell-${date}-${brand}`, () => performCellSave(date, brand, val, event));
                 return;
             }
             if (target.matches('.pos-ref-input')) {
@@ -1435,7 +1568,9 @@
             const target = e.target;
             if (target.matches('.grid-input[data-brand]')) {
                 const { date, brand, event } = target.dataset;
-                debouncedSave(`cell-${date}-${brand}`, () => updateCell(date, brand, target.value, event));
+                const val = target.value;
+                setCellState(date, brand, 'pending', val, event);
+                debouncedSave(`cell-${date}-${brand}`, () => performCellSave(date, brand, val, event));
                 return;
             }
             if (target.matches('.pos-ref-input')) {
@@ -1444,23 +1579,85 @@
             }
         });
 
-        async function updateCell(dateStr, brandName, value, eventTitle) {
+        async function performCellSave(dateStr, brandName, value, eventTitle) {
             if (!db) return;
             const numValue = parseFloat(value) || 0;
+            setCellState(dateStr, brandName, 'saving', value, eventTitle);
             const existing = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === brandName);
             try {
                 if (existing) {
                     const { error } = await db.from('fair_daily_sales').update({ amount: numValue }).eq('id', existing.id);
                     if (error) throw error;
+                    existing.amount = numValue;
                 } else if (numValue > 0) {
-                    const { error } = await db.from('fair_daily_sales').insert([{
+                    const { data: inserted, error } = await db.from('fair_daily_sales').insert([{
                         event_title: eventTitle, department: DEFAULT_DEPARTMENT, sale_date: dateStr, brand_name: brandName, amount: numValue, pos_ref: DEFAULT_POS_REF
-                    }]);
+                    }]).select();
                     if (error) throw error;
+                    if (inserted && inserted[0]) currentSalesData.push(inserted[0]);
                 }
-                await loadSalesGrid();
+                setCellState(dateStr, brandName, 'saved', value, eventTitle);
+                setTimeout(() => {
+                    const cur = getCellState(dateStr, brandName);
+                    if (cur && cur.state === 'saved') setCellState(dateStr, brandName, null);
+                }, 1500);
+                updateRowTotalsInPlace(dateStr, brandName);
                 await loadData();
-            } catch (err) { showError('Failed to save cell: ' + (err.message || 'unknown error')); console.error(err); }
+            } catch (err) {
+                setCellState(dateStr, brandName, 'failed', value, eventTitle);
+                showError('Failed to save cell: ' + (err.message || 'unknown error'));
+                console.error(err);
+            }
+        }
+
+        function updateRowTotalsInPlace(dateStr, brandName) {
+            if (!currentSalesEvent) return;
+            const start = parseLocalDate(currentSalesEvent.start_date);
+            const endInc = parseLocalDate(currentSalesEvent.end_date);
+            endInc.setDate(endInc.getDate() - 1);
+            const dateRows = document.querySelectorAll('#salesGridBody tr');
+            let grandTotal = 0;
+            const brandTotals = {};
+            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
+            brands.forEach(b => brandTotals[b] = 0);
+
+            dateRows.forEach(row => {
+                if (row.classList.contains('total-row')) return;
+                const dateCell = row.querySelector('td');
+                if (!dateCell) return;
+                let rowTotal = 0;
+                row.querySelectorAll('.grid-input[data-brand]').forEach(inp => {
+                    const v = parseFloat(inp.value) || 0;
+                    rowTotal += v;
+                    const b = inp.dataset.brand;
+                    if (brandTotals[b] !== undefined) brandTotals[b] += v;
+                    else brandTotals[b] = v;
+                });
+                grandTotal += rowTotal;
+                const totalInput = row.querySelector('.col-daily-total .grid-input');
+                if (totalInput) totalInput.value = rowTotal > 0 ? rowTotal.toFixed(2) : '';
+            });
+
+            const totalRow = document.querySelector('#salesGridBody .total-row');
+            if (totalRow) {
+                const cells = totalRow.querySelectorAll('td');
+                let idx = 2;
+                brands.forEach(b => {
+                    if (cells[idx]) cells[idx].textContent = `RM ${(brandTotals[b] || 0).toFixed(2)}`;
+                    idx++;
+                });
+                const grandCell = totalRow.querySelector('.grand-total-cell');
+                if (grandCell) grandCell.textContent = `RM ${grandTotal.toFixed(2)}`;
+            }
+
+            const floatingTotalEl = document.getElementById('floatingGrandTotal');
+            if (floatingTotalEl) {
+                floatingTotalEl.textContent = `RM ${grandTotal.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+        }
+
+        async function updateCell(dateStr, brandName, value, eventTitle) {
+            await performCellSave(dateStr, brandName, value, eventTitle);
         }
 
         async function updatePosRef(dateStr, newRef, eventTitle) {
