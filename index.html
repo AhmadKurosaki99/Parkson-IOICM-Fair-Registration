@@ -25,20 +25,11 @@
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-dark); animation: fadeIn 0.6s ease-out; }
         
-        header { 
-            background: white; 
-            padding: 15px 20px; 
-            text-align: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            border-bottom: 3px solid var(--parkson-green);
-            position: relative; 
-            z-index: 10; 
-        }
+        header { background: white; padding: 15px 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-bottom: 3px solid var(--parkson-green); position: relative; z-index: 10; }
         header img { max-height: 60px; width: auto; margin-bottom: 5px; }
         header h1 { margin: 5px 0 0 0; font-size: 18px; color: var(--parkson-green); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
         header p { margin: 2px 0 0 0; font-size: 13px; color: var(--text-light); }
         
-        /* --- TABS --- */
         .tabs { display: flex; justify-content: center; background: white; border-bottom: 1px solid #ddd; }
         .tab-btn { padding: 15px 30px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; margin: 0; width: auto; text-transform: uppercase; border-radius: 0;}
         .tab-btn:hover { color: var(--parkson-green); background: #f9f9f9; transform: none; box-shadow: none; }
@@ -49,14 +40,7 @@
 
         .container { display: flex; flex-wrap: wrap; padding: 25px; gap: 25px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
         
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 4px; 
-            box-shadow: 0 6px 18px rgba(0,0,0,0.04); 
-            border-top: 3px solid var(--parkson-green);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+        .card { background: white; padding: 25px; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); border-top: 3px solid var(--parkson-green); transition: transform 0.3s ease, box-shadow 0.3s ease; }
         .card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
         
         .calendar-card { flex: 1.1; min-width: 350px; max-width: 480px; }
@@ -99,7 +83,6 @@
         .btn-delete:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
         .btn-delete svg { width: 18px; height: 18px; fill: currentColor; }
 
-        /* --- SALES GRID SPECIFIC --- */
         .sales-controls { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #ddd; }
         .sales-controls select { margin: 0; width: auto; min-width: 200px; }
         .grid-input { width: 100px; padding: 8px; margin: 0; text-align: right; border: 1px solid transparent; background: transparent; transition: all 0.2s; }
@@ -110,7 +93,6 @@
         .sales-table td:first-child, .sales-table th:first-child { text-align: left; font-weight: bold; }
         .total-row td { background: #fcfcfc; font-weight: 800; color: var(--parkson-green); border-top: 2px solid var(--parkson-green); }
 
-        /* Calendar overrides */
         #calendar { font-family: 'Segoe UI', sans-serif; }
         .fc-toolbar { margin-bottom: 20px !important; display: flex; align-items: center; justify-content: space-between; }
         .fc-toolbar-title { font-size: 18px !important; font-weight: 700 !important; color: var(--text-dark); text-transform: uppercase; }
@@ -141,13 +123,11 @@
         <p>Promotion & Fair Registration System</p>
     </header>
 
-    <!-- TABS -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('registration')">Event Registration</button>
         <button class="tab-btn" onclick="switchTab('sales')">Sales Tracker</button>
     </div>
     
-    <!-- TAB 1: REGISTRATION -->
     <div id="tab-registration" class="tab-content active">
         <div class="container">
             <div class="card calendar-card">
@@ -204,7 +184,6 @@
         </div>
     </div>
 
-    <!-- TAB 2: SALES TRACKER -->
     <div id="tab-sales" class="tab-content">
         <div class="container" style="flex-direction: column;">
             
@@ -239,7 +218,6 @@
     </div>
 
     <script>
-        // ⚠️ YOUR EXACT URL AND KEY
         const SUPABASE_URL = 'https://qbrbtmuwkykdvgxawuiw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE';
         
@@ -254,7 +232,6 @@
         let calendar;
         let sortAscending = true;
 
-        // --- TABS LOGIC ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -269,7 +246,6 @@
             }
         }
 
-        // --- INITIALIZATION ---
         const form = document.getElementById('regForm');
         const tableBody = document.getElementById('tableBody');
         const searchBar = document.getElementById('searchBar');
@@ -316,7 +292,6 @@
             } catch (err) { console.error(err); }
         }
 
-        // Registration Submission
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             if(!db) return;
@@ -373,7 +348,7 @@
                     <td><span class="status-active">${item.status}</span></td>
                     <td>${item.notes || '-'}</td>
                     <td style="text-align: center;">
-                        <button class="btn-delete" onclick="deleteRegistration(${item.id})" title="Delete Registration">
+                        <button class="btn-delete" onclick="deleteRegistration(${item.id}, '${item.event_title}')" title="Delete Registration">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                         </button>
                     </td>
@@ -404,12 +379,20 @@
             renderDashboard();
         }
 
-        async function deleteRegistration(id) {
-            if(confirm("Delete this registration?")) { await db.from('registrations').delete().eq('id', id); await loadData(); }
-        }
+        // --- UPDATED DELETE FUNCTION ---
+        async function deleteRegistration(id, eventTitle) {
+            if(confirm("Delete this registration?")) { 
+                // 1. Delete the registration from the database
+                await db.from('registrations').delete().eq('id', id); 
+                
+                // 2. Also delete the matching event from the events database
+                // (This ensures the calendar is updated too)
+                await db.from('events').delete().eq('title', eventTitle);
 
-        async function deleteEvent(id) {
-            if(confirm("Delete this promotion from the calendar?")) { await db.from('events').delete().eq('id', id); await loadData(); loadSalesEventsDropdown(); }
+                // 3. Reload the data to update both the table and the calendar
+                await loadData(); 
+                loadSalesEventsDropdown();
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -419,8 +402,6 @@
                     initialView: 'dayGridMonth',
                     headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
                     height: 'auto', selectable: false, editable: false, events: [], 
-                    
-                    // THE FIX: Clicking an event only shows details, it does NOT delete.
                     eventClick: function(info) {
                         let eventObj = info.event;
                         let start = eventObj.startStr;
