@@ -230,6 +230,43 @@
         .toast.error { background: #e74c3c; }
         .empty-state { text-align: center; color: #999; padding: 40px 20px; font-style: italic; }
 
+        /* --- SKELETON LOADERS --- */
+        @keyframes shimmer {
+            0%   { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+
+        .skeleton {
+            background: #e9edf0;
+            background-image: linear-gradient(90deg, #e9edf0 0px, #f4f7f9 40px, #e9edf0 80px);
+            background-size: 400px 100%;
+            background-repeat: no-repeat;
+            border-radius: 4px;
+            animation: shimmer 1.2s infinite linear;
+            display: inline-block;
+        }
+
+        .skeleton-text   { height: 12px; width: 100%; }
+        .skeleton-text-sm{ height: 10px; width: 60%; }
+        .skeleton-badge  { height: 20px; width: 70px; border-radius: 2px; }
+        .skeleton-input  { height: 38px; width: 100%; border-radius: 4px; }
+        .skeleton-stat   { height: 32px; width: 70%; margin: 4px 0 8px 0; }
+        .skeleton-chart  { height: 100%; width: 100%; border-radius: 4px; min-height: 260px; }
+
+        .skeleton-row td { padding: 15px; }
+        .sales-table .skeleton-input { width: 90px; margin: 0 auto; }
+
+        .chart-skeleton-wrapper {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .report-card .skeleton-stat { display: block; }
+
         /* --- MOBILE CARD VIEW STYLES --- */
         .mobile-card-view { display: none; }
 
@@ -274,20 +311,17 @@
 
         /* --- PRINT STYLES --- */
         @media print {
-            /* Hide everything except the table */
             body { background: white !important; font-size: 12px !important; margin: 0 !important; padding: 0 !important; }
             header, .tabs, .quick-nav-btn, .sales-header-bar .sales-add-brand, .sales-actions, .mobile-card-view { display: none !important; }
             
             .container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; display: block !important; }
             .card { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; border-top: none !important; }
             
-            /* Style the header for printing */
             h2 { font-size: 18px !important; margin-bottom: 5px !important; border-bottom: 1px solid #000 !important; padding-bottom: 5px !important; }
             .sales-event-selector { margin-bottom: 15px !important; display: block !important; }
             .sales-event-selector label { font-size: 14px !important; }
             .sales-event-selector select { border: none !important; background: transparent !important; font-size: 16px !important; font-weight: bold !important; padding: 0 !important; margin: 0 !important; -webkit-appearance: none; -moz-appearance: none; appearance: none; color: #000 !important; }
 
-            /* FORCE THE TABLE TO BE VISIBLE */
             .sales-grid-wrapper { 
                 display: block !important;
                 max-height: none !important; 
@@ -299,10 +333,8 @@
             .sales-table th, .sales-table td { border: 1px solid #000 !important; color: #000 !important; background: white !important; padding: 6px !important; }
             .sales-table th { background: #eee !important; font-weight: bold !important; }
             
-            /* Remove Sticky Positioning for Print */
             .sales-table th, .sales-table td, .sales-table td:first-child, .sales-table th:first-child, .sales-table td:nth-child(2), .sales-table th:nth-child(2) { position: static !important; }
 
-            /* Clean up inputs */
             .grid-input { border: none !important; background: transparent !important; box-shadow: none !important; text-align: right !important; width: 100% !important; font-size: 12px !important; padding: 0 !important; color: #000 !important; }
             .grid-input::-webkit-outer-spin-button, .grid-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
             .grid-input[type=number] { -moz-appearance: textfield; }
@@ -310,7 +342,6 @@
             .brand-pill { background: transparent !important; padding: 0 !important; color: #000 !important; font-weight: bold !important; }
             .btn-del-brand { display: none !important; }
             
-            /* Table Colors */
             .col-daily-total { background: #f9f9f9 !important; font-weight: bold !important; }
             .total-row td { background: #e0e0e0 !important; font-weight: bold !important; border-top: 2px solid #000 !important; position: static !important; color: #000 !important; }
             
@@ -534,6 +565,9 @@
         let brandChartInstance = null;
         let dailyChartInstance = null;
 
+        let salesGridFirstLoad = true;
+        let dashboardFirstLoad = true;
+
         function getTodayMidnight() {
             const d = new Date();
             d.setHours(0,0,0,0);
@@ -569,6 +603,123 @@
         }
 
         function showError(msg) { toast(msg, 'error'); console.error(msg); }
+
+        // ---------- SKELETON HELPERS ----------
+        function skeletonText(width = '100%') {
+            return `<span class="skeleton skeleton-text" style="width:${width}"></span>`;
+        }
+        function skeletonBadge() {
+            return `<span class="skeleton skeleton-badge"></span>`;
+        }
+
+        function showTableSkeleton(rowCount = 5) {
+            const tableBody = document.getElementById('tableBody');
+            let html = '';
+            for (let i = 0; i < rowCount; i++) {
+                html += `<tr class="skeleton-row">
+                    <td>${skeletonText('60%')}</td>
+                    <td>${skeletonText('80%')}</td>
+                    <td>${skeletonText('50%')}</td>
+                    <td>${skeletonBadge()}</td>
+                    <td>${skeletonText('90%')}</td>
+                    <td style="text-align:center;">${skeletonText('40%')}</td>
+                </tr>`;
+            }
+            tableBody.innerHTML = html;
+        }
+
+        function showSalesGridSkeleton() {
+            const headEl = document.getElementById('salesGridHead');
+            const bodyEl = document.getElementById('salesGridBody');
+            const mobileEl = document.getElementById('mobileSalesGrid');
+            const floatingTotalEl = document.getElementById('floatingGrandTotal');
+
+            headEl.innerHTML = `<tr>
+                <th style="min-width:90px;">${skeletonText('60%')}</th>
+                <th style="min-width:60px;">${skeletonText('60%')}</th>
+                <th>${skeletonText('70%')}</th>
+                <th>${skeletonText('70%')}</th>
+                <th>${skeletonText('70%')}</th>
+                <th class="col-daily-total" style="min-width:110px;">${skeletonText('60%')}</th>
+                <th style="min-width:100px;">${skeletonText('60%')}</th>
+            </tr>`;
+
+            let bodyHtml = '';
+            for (let i = 0; i < 5; i++) {
+                bodyHtml += `<tr>
+                    <td>${skeletonText('70%')}</td>
+                    <td>${skeletonText('50%')}</td>
+                    <td><span class="skeleton skeleton-input"></span></td>
+                    <td><span class="skeleton skeleton-input"></span></td>
+                    <td><span class="skeleton skeleton-input"></span></td>
+                    <td class="col-daily-total"><span class="skeleton skeleton-input"></span></td>
+                    <td><span class="skeleton skeleton-input"></span></td>
+                </tr>`;
+            }
+            bodyEl.innerHTML = bodyHtml;
+
+            let mobileHtml = '';
+            for (let i = 0; i < 2; i++) {
+                mobileHtml += `<div class="mobile-day-card">
+                    <div class="mobile-day-header">
+                        <span>${skeletonText('40%')}</span>
+                        <span>${skeletonText('50%')}</span>
+                    </div>
+                    <div class="mobile-brand-row">
+                        <div style="width:40%;">${skeletonText('70%')}</div>
+                        <span class="skeleton skeleton-input" style="width:120px;"></span>
+                    </div>
+                    <div class="mobile-brand-row">
+                        <div style="width:40%;">${skeletonText('70%')}</div>
+                        <span class="skeleton skeleton-input" style="width:120px;"></span>
+                    </div>
+                    <div class="mobile-day-footer">
+                        <span>${skeletonText('30%')}</span>
+                        <span>${skeletonText('40%')}</span>
+                    </div>
+                </div>`;
+            }
+            mobileEl.innerHTML = mobileHtml;
+
+            floatingTotalEl.textContent = 'RM —';
+        }
+
+        function showReportsSkeleton() {
+            const revenueEl = document.getElementById('reportTotalRevenue');
+            const topBrandEl = document.getElementById('reportTopBrand');
+            const topBrandSalesEl = document.getElementById('reportTopBrandSales');
+            const bestDayEl = document.getElementById('reportBestDay');
+            const bestDaySalesEl = document.getElementById('reportBestDaySales');
+
+            revenueEl.innerHTML = `<span class="skeleton skeleton-stat"></span>`;
+            topBrandEl.innerHTML = `<span class="skeleton skeleton-stat"></span>`;
+            topBrandSalesEl.innerHTML = `<span class="skeleton skeleton-text-sm"></span>`;
+            bestDayEl.innerHTML = `<span class="skeleton skeleton-stat"></span>`;
+            bestDaySalesEl.innerHTML = `<span class="skeleton skeleton-text-sm"></span>`;
+
+            if (brandChartInstance) { brandChartInstance.destroy(); brandChartInstance = null; }
+            if (dailyChartInstance) { dailyChartInstance.destroy(); dailyChartInstance = null; }
+
+            const brandWrapper = document.getElementById('brandChart').parentElement;
+            const dailyWrapper = document.getElementById('dailyChart').parentElement;
+
+            brandWrapper.querySelectorAll('.chart-skeleton-wrapper').forEach(n => n.remove());
+            dailyWrapper.querySelectorAll('.chart-skeleton-wrapper').forEach(n => n.remove());
+
+            const brandOverlay = document.createElement('div');
+            brandOverlay.className = 'chart-skeleton-wrapper';
+            brandOverlay.innerHTML = `<span class="skeleton skeleton-chart"></span>`;
+            brandWrapper.appendChild(brandOverlay);
+
+            const dailyOverlay = document.createElement('div');
+            dailyOverlay.className = 'chart-skeleton-wrapper';
+            dailyOverlay.innerHTML = `<span class="skeleton skeleton-chart"></span>`;
+            dailyWrapper.appendChild(dailyOverlay);
+        }
+
+        function clearChartSkeletons() {
+            document.querySelectorAll('.chart-skeleton-wrapper').forEach(n => n.remove());
+        }
 
         function getEventStatusAndProgress(event) {
             if (!event) return { status: 'Unknown', progress: null };
@@ -640,6 +791,7 @@
 
         async function loadData() {
             if (!db) return;
+            if (dashboardFirstLoad) { showTableSkeleton(); dashboardFirstLoad = false; }
             try {
                 const { data: eventData, error: evErr } = await db.from('events').select('*');
                 if (evErr) { showError('Failed to load events: ' + evErr.message); return; }
@@ -1052,6 +1204,7 @@
 
         salesEventSelect.addEventListener('change', () => {
             localStorage.setItem(LS_SALES_EVENT, salesEventSelect.value);
+            salesGridFirstLoad = true;
             loadSalesGrid();
         });
 
@@ -1071,6 +1224,8 @@
             const event = savedEvents.find(e => e.title === eventTitle);
             if (!event) return;
             currentSalesEvent = event;
+
+            if (salesGridFirstLoad) { showSalesGridSkeleton(); salesGridFirstLoad = false; }
 
             const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
             if (error) { showError('Failed to load sales: ' + error.message); return; }
@@ -1092,7 +1247,6 @@
 
             const todayStr = formatLocalDate(getTodayMidnight());
 
-            // --- DESKTOP VIEW ---
             let headHtml = `<tr><th style="min-width: 90px;">Date</th><th style="min-width: 60px;">Day</th>`;
             brands.forEach(b => { 
                 headHtml += `<th>
@@ -1127,7 +1281,6 @@
                 let rowTotal = 0;
                 let posRef = '-';
 
-                // Build Desktop Row
                 bodyHtml += `<tr class="${rowClass}"><td>${displayDate}</td><td>${dayName}</td>`;
                 brands.forEach(b => {
                     const entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
@@ -1142,7 +1295,6 @@
                 bodyHtml += `<td><input type="text" class="grid-input pos-ref-input" data-date="${dateStr}" data-event="${escapeHtml(eventTitle)}" value="${escapeHtml(posRef)}" style="width:80px;"></td>`;
                 bodyHtml += `</tr>`;
 
-                // Build Mobile Card
                 mobileHtml += `<div class="mobile-day-card ${rowClass}">
                     <div class="mobile-day-header">
                         <span class="mobile-day-title">${dayName}</span>
@@ -1202,7 +1354,7 @@
                     if (error) throw error;
                     toast('Brand renamed successfully!');
                     await loadSalesGrid();
-                    await loadData(); // Refresh health check
+                    await loadData();
                 } catch (err) { showError('Rename failed: ' + (err.message || 'unknown error')); targetTh.innerHTML = currentHtml; }
             };
 
@@ -1259,7 +1411,6 @@
             }
         });
 
-        // Attach same events for mobile inputs
         document.getElementById('mobileSalesGrid').addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown' || e.key === 'Enter') {
                 if (e.target.matches('.grid-input[data-brand]')) {
@@ -1308,7 +1459,7 @@
                     if (error) throw error;
                 }
                 await loadSalesGrid();
-                await loadData(); // Refresh health check
+                await loadData();
             } catch (err) { showError('Failed to save cell: ' + (err.message || 'unknown error')); console.error(err); }
         }
 
@@ -1359,11 +1510,10 @@
                 if (error) throw error;
                 toast(`Brand "${brand}" deleted.`);
                 await loadSalesGrid();
-                await loadData(); // Refresh health check
+                await loadData();
             } catch (err) { showError('Failed to delete brand: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
-        // --- ZERO OUT EMPTY ---
         document.getElementById('zeroFillBtn').addEventListener('click', async () => {
             if (!currentSalesEvent || currentSalesData.length === 0) { showError("No data to process."); return; }
             if (!confirm('This will fill any COMPLETELY EMPTY cells in the grid with a 0. Proceed?')) return;
@@ -1401,11 +1551,10 @@
                 if (error) throw error;
                 toast(`Zeroed-out ${inserts.length} empty cells!`);
                 await loadSalesGrid();
-                await loadData(); // Refresh health check
+                await loadData();
             } catch (err) { showError('Zero-out failed: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
-        // --- PRINT PDF ---
         document.getElementById('printBtn').addEventListener('click', () => {
             if (!currentSalesEvent) { showError('Please select an event first.'); return; }
             window.print();
@@ -1445,9 +1594,6 @@
             toast('Excel report downloaded!');
         });
 
-        // ==========================================
-        // TAB 3: REPORTS & ANALYTICS LOGIC
-        // ==========================================
         reportsEventSelect.addEventListener('change', () => {
             localStorage.setItem(LS_REPORTS_EVENT, reportsEventSelect.value);
             loadReports();
@@ -1467,18 +1613,23 @@
                 topBrandSalesEl.textContent = 'RM 0.00 in sales';
                 bestDayEl.textContent = '-';
                 bestDaySalesEl.textContent = 'RM 0.00 in sales';
-                if (brandChartInstance) brandChartInstance.destroy();
-                if (dailyChartInstance) dailyChartInstance.destroy();
+                if (brandChartInstance) { brandChartInstance.destroy(); brandChartInstance = null; }
+                if (dailyChartInstance) { dailyChartInstance.destroy(); dailyChartInstance = null; }
+                clearChartSkeletons();
                 return;
             }
 
             const event = savedEvents.find(e => e.title === eventTitle);
             if (!event) return;
 
+            showReportsSkeleton();
+
             const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
-            if (error) { showError('Failed to load reports: ' + error.message); return; }
+            if (error) { showError('Failed to load reports: ' + error.message); clearChartSkeletons(); return; }
             
             const data = salesData || [];
+
+            clearChartSkeletons();
 
             let totalRevenue = 0;
             data.forEach(row => totalRevenue += (row.amount || 0));
