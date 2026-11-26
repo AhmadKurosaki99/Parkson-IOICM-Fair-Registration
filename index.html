@@ -7,6 +7,8 @@
 
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js for the new Reports Tab -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -74,7 +76,6 @@
         .stat-box h3 { margin: 0; font-size: 32px; color: var(--parkson-green); font-weight: 700; }
         .stat-box p { margin: 5px 0 0 0; font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
         
-        /* New Stat Box Styles for Next Event */
         .stat-next-event h3 { font-size: 20px !important; margin-bottom: 4px; line-height: 1.2; }
         .stat-next-event p { font-size: 11px !important; }
         .stat-next-active { border-left: 4px solid var(--parkson-green); }
@@ -175,6 +176,21 @@
         .btn-del-brand:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
         .brand-rename-input { width: 80px; padding: 2px 4px; font-size: 12px; font-weight: bold; text-align: center; border: 1px solid var(--parkson-green); border-radius: 4px; margin: 0; }
 
+        /* --- REPORTS TAB SPECIFIC STYLES --- */
+        .reports-controls { background: white; padding: 20px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid #eee; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .reports-controls select { margin: 0; width: auto; min-width: 250px; font-weight: 700; border-color: var(--parkson-green); }
+        
+        .reports-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .report-card { background: white; padding: 20px; border-radius: 4px; border-left: 5px solid var(--parkson-green); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .report-card h4 { margin: 0; font-size: 13px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+        .report-card h2 { margin: 10px 0 0 0; font-size: 28px; color: var(--parkson-green); border: none; padding: 0; }
+        .report-card p { margin: 5px 0 0 0; font-size: 13px; color: #888; }
+        
+        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chart-card { background: white; padding: 20px; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); border-top: 3px solid var(--parkson-green); height: 400px; display: flex; flex-direction: column; }
+        .chart-card h3 { margin: 0 0 15px 0; font-size: 15px; color: var(--text-dark); font-weight: 700; text-transform: uppercase; }
+        .chart-wrapper { position: relative; flex: 1; min-height: 0; }
+
         #calendar { font-family: 'Segoe UI', sans-serif; }
         .fc-toolbar { margin-bottom: 20px !important; display: flex; align-items: center; justify-content: space-between; }
         .fc-toolbar-title { font-size: 18px !important; font-weight: 700 !important; color: var(--text-dark); text-transform: uppercase; }
@@ -199,6 +215,11 @@
         .toast { position: fixed; bottom: 20px; right: 20px; padding: 14px 22px; border-radius: 4px; color: white; background: var(--parkson-green); z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease-out; font-weight: 600; font-size: 14px; max-width: 320px; }
         .toast.error { background: #e74c3c; }
         .empty-state { text-align: center; color: #999; padding: 40px 20px; font-style: italic; }
+
+        @media (max-width: 1024px) {
+            .reports-grid { grid-template-columns: 1fr; }
+            .charts-container { grid-template-columns: 1fr; }
+        }
 
         @media (max-width: 900px) {
             .sales-header-bar { flex-direction: column; align-items: stretch; }
@@ -231,8 +252,10 @@
     <div class="tabs">
         <button class="tab-btn active" data-tab="registration">Event Registration</button>
         <button class="tab-btn" data-tab="sales">Sales Tracker</button>
+        <button class="tab-btn" data-tab="reports">Reports &amp; Analytics</button>
     </div>
 
+    <!-- TAB 1: REGISTRATION -->
     <div id="tab-registration" class="tab-content active">
         <div class="container">
             <div class="card calendar-card">
@@ -247,7 +270,6 @@
                 <h2 id="formTitle">Fair Registration</h2>
                 <form id="regForm">
                     <input type="hidden" id="editRegId" value="">
-                    
                     <label>Department:</label>
                     <select id="department" required>
                         <option value="" disabled selected>Select Department...</option>
@@ -263,7 +285,6 @@
                     <input type="text" id="newEventName" placeholder="e.g. Mega Sale..." required>
                     <label>Remarks / Notes:</label>
                     <textarea id="notes" rows="2" placeholder="Optional details..."></textarea>
-                    
                     <button type="submit" id="submitBtn">Add Event to Calendar</button>
                     <button type="button" id="cancelEditBtn">Cancel Edit</button>
                 </form>
@@ -271,8 +292,6 @@
 
             <div class="card table-card">
                 <h2>Dashboard &amp; Registrations</h2>
-                
-                <!-- NEW SMART STAT BOXES -->
                 <div class="dashboard-stats">
                     <div class="stat-box"><h3 id="totalRegs">0</h3><p>Total Registrations</p></div>
                     <div class="stat-box stat-next-event" id="nextEventBox">
@@ -280,9 +299,7 @@
                         <p id="nextEventSubtitle">Checking schedule...</p>
                     </div>
                 </div>
-                
                 <button id="cleanupBtn" class="btn-cleanup">🧹 Remove Ghost Events (No Registration)</button>
-                
                 <input type="text" id="searchBar" placeholder="Search/Filter...">
                 <table>
                     <thead>
@@ -301,11 +318,11 @@
         </div>
     </div>
 
+    <!-- TAB 2: SALES TRACKER -->
     <div id="tab-sales" class="tab-content">
         <div class="container" style="flex-direction: column;">
             <div class="card" style="width: 100%; box-sizing: border-box;">
                 <h2>Sales Tracker (Premium View)</h2>
-                
                 <div class="sales-header-bar">
                     <div class="sales-event-selector">
                         <label>Selected Event:</label>
@@ -313,12 +330,10 @@
                             <option value="">Select an Event...</option>
                         </select>
                     </div>
-                    
                     <div class="sales-add-brand">
                         <input type="text" id="newBrandName" placeholder="Add new brand...">
                         <button id="addBrandBtn">+ Add</button>
                     </div>
-
                     <div class="sales-actions">
                         <button id="autoFillBtn" class="btn-action btn-fill" title="Copy the first entered number to all empty days for that brand">✨ Auto-Fill</button>
                         <button id="exportBtn" class="btn-action btn-export">⬇ Export</button>
@@ -328,7 +343,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="sales-grid-wrapper">
                     <table class="sales-table" id="salesGrid">
                         <thead id="salesGridHead"></thead>
@@ -336,6 +350,53 @@
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: REPORTS & ANALYTICS (NEW) -->
+    <div id="tab-reports" class="tab-content">
+        <div class="container" style="flex-direction: column;">
+            
+            <div class="reports-controls">
+                <label style="margin:0; font-weight:bold; color: var(--parkson-green);">Select Event to Analyze:</label>
+                <select id="reportsEventSelect">
+                    <option value="">Select an Event...</option>
+                </select>
+            </div>
+
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h4>Total Revenue</h4>
+                    <h2 id="reportTotalRevenue">RM 0.00</h2>
+                    <p>Combined sales of all brands</p>
+                </div>
+                <div class="report-card" style="border-left-color: var(--edit-blue);">
+                    <h4>Top Performing Brand</h4>
+                    <h2 id="reportTopBrand">-</h2>
+                    <p id="reportTopBrandSales">RM 0.00 in sales</p>
+                </div>
+                <div class="report-card" style="border-left-color: #f39c12;">
+                    <h4>Best Sales Day</h4>
+                    <h2 id="reportBestDay">-</h2>
+                    <p id="reportBestDaySales">RM 0.00 in sales</p>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Total Sales by Brand</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="brandChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Daily Sales Trend</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -358,6 +419,10 @@
         let sortAscending = true;
         let currentSalesData = [];
         let currentSalesEvent = null;
+        
+        // Chart.js variables to allow updating/destroying
+        let brandChartInstance = null;
+        let dailyChartInstance = null;
 
         function getTodayMidnight() {
             const d = new Date();
@@ -417,7 +482,9 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             btn.classList.add('active');
-            if (tabId === 'sales') { loadSalesEventsDropdown(); } 
+            
+            if (tabId === 'sales') { loadSalesEventsDropdown('salesEventSelect'); } 
+            else if (tabId === 'reports') { loadSalesEventsDropdown('reportsEventSelect'); }
             else if (tabId === 'registration' && calendar) { calendar.render(); }
         }
 
@@ -439,6 +506,7 @@
         const newEventNameInput = document.getElementById('newEventName');
         const notesInput = document.getElementById('notes');
         const salesEventSelect = document.getElementById('salesEventSelect');
+        const reportsEventSelect = document.getElementById('reportsEventSelect');
 
         for (let i = 31; i <= 55; i++) {
             const option = document.createElement('option');
@@ -479,13 +547,11 @@
             } catch (err) { showError('Network error while loading data.'); console.error(err); }
         }
 
-        // --- IDEA 17: NEXT EVENT STAT LOGIC ---
         function updateNextEventStat() {
             const box = document.getElementById('nextEventBox');
             const titleEl = document.getElementById('nextEventTitle');
             const subEl = document.getElementById('nextEventSubtitle');
 
-            // Reset classes
             box.className = 'stat-box stat-next-event';
 
             if (savedEvents.length === 0) {
@@ -497,7 +563,6 @@
 
             const today = getTodayMidnight();
 
-            // Find active events first
             const activeEvents = savedEvents.filter(e => {
                 const start = parseLocalDate(e.start_date);
                 const endInc = parseLocalDate(e.end_date);
@@ -506,7 +571,6 @@
             });
 
             if (activeEvents.length > 0) {
-                // Show the one that ends soonest
                 activeEvents.sort((a, b) => new Date(a.end_date) - new Date(b.end_date));
                 const ev = activeEvents[0];
                 const endInc = parseLocalDate(ev.end_date);
@@ -519,7 +583,6 @@
                 return;
             }
 
-            // If no active, find the soonest upcoming event
             const upcomingEvents = savedEvents.filter(e => {
                 return parseLocalDate(e.start_date) > today;
             });
@@ -536,7 +599,6 @@
                 return;
             }
 
-            // If all events are completed
             box.classList.add('stat-next-none');
             titleEl.textContent = 'None';
             subEl.textContent = 'All events completed';
@@ -590,7 +652,8 @@
                 }
                 resetForm();
                 await loadData();
-                loadSalesEventsDropdown();
+                loadSalesEventsDropdown('salesEventSelect');
+                loadSalesEventsDropdown('reportsEventSelect');
             } catch (err) {
                 showError('Save failed: ' + (err.message || 'unknown error'));
                 console.error(err);
@@ -707,7 +770,8 @@
                     if (editRegId.value === id) resetForm();
                     toast('Registration deleted.');
                     await loadData();
-                    loadSalesEventsDropdown();
+                    loadSalesEventsDropdown('salesEventSelect');
+                    loadSalesEventsDropdown('reportsEventSelect');
                 } catch (err) { showError('Delete failed: ' + (err.message || 'unknown error')); console.error(err); }
             }
         });
@@ -771,18 +835,21 @@
                 for (const ev of orphans) { await db.from('events').delete().eq('id', ev.id); }
                 toast(`Removed ${orphans.length} ghost event(s).`);
                 await loadData();
-                loadSalesEventsDropdown();
+                loadSalesEventsDropdown('salesEventSelect');
+                loadSalesEventsDropdown('reportsEventSelect');
             } catch (err) { showError('Cleanup failed: ' + (err.message || 'unknown')); console.error(err); }
         });
 
-        function loadSalesEventsDropdown() {
-            const currentVal = salesEventSelect.value;
-            salesEventSelect.innerHTML = '<option value="">Select an Event...</option>';
+        function loadSalesEventsDropdown(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">Select an Event...</option>';
             savedEvents.forEach(e => {
                 const opt = document.createElement('option');
                 opt.value = e.title;
                 opt.text = e.title;
-                salesEventSelect.appendChild(opt);
+                select.appendChild(opt);
             });
             
             if (!currentVal && savedEvents.length > 0) {
@@ -797,12 +864,19 @@
                     const sorted = [...savedEvents].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
                     activeEvent = sorted[0];
                 }
-                if (activeEvent) { salesEventSelect.value = activeEvent.title; loadSalesGrid(); }
+                if (activeEvent) { 
+                    select.value = activeEvent.title; 
+                    if (selectId === 'salesEventSelect') loadSalesGrid(); 
+                    if (selectId === 'reportsEventSelect') loadReports();
+                }
             } else if (currentVal) {
-                salesEventSelect.value = currentVal;
+                select.value = currentVal;
             }
         }
 
+        // ==========================================
+        // TAB 2: SALES GRID LOGIC
+        // ==========================================
         salesEventSelect.addEventListener('change', () => loadSalesGrid());
 
         async function loadSalesGrid() {
@@ -1093,6 +1167,155 @@
             document.body.removeChild(link);
             toast('Excel report downloaded!');
         });
+
+        // ==========================================
+        // TAB 3: REPORTS & ANALYTICS LOGIC
+        // ==========================================
+        reportsEventSelect.addEventListener('change', () => loadReports());
+
+        async function loadReports() {
+            const eventTitle = reportsEventSelect.value;
+            const revenueEl = document.getElementById('reportTotalRevenue');
+            const topBrandEl = document.getElementById('reportTopBrand');
+            const topBrandSalesEl = document.getElementById('reportTopBrandSales');
+            const bestDayEl = document.getElementById('reportBestDay');
+            const bestDaySalesEl = document.getElementById('reportBestDaySales');
+
+            if (!eventTitle) {
+                revenueEl.textContent = 'RM 0.00';
+                topBrandEl.textContent = '-';
+                topBrandSalesEl.textContent = 'RM 0.00 in sales';
+                bestDayEl.textContent = '-';
+                bestDaySalesEl.textContent = 'RM 0.00 in sales';
+                if (brandChartInstance) brandChartInstance.destroy();
+                if (dailyChartInstance) dailyChartInstance.destroy();
+                return;
+            }
+
+            const event = savedEvents.find(e => e.title === eventTitle);
+            if (!event) return;
+
+            const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
+            if (error) { showError('Failed to load reports: ' + error.message); return; }
+            
+            const data = salesData || [];
+
+            // 1. Calculate Total Revenue
+            let totalRevenue = 0;
+            data.forEach(row => totalRevenue += (row.amount || 0));
+            revenueEl.textContent = `RM ${totalRevenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // 2. Calculate Brand Totals
+            const brandTotals = {};
+            data.forEach(row => {
+                if (!brandTotals[row.brand_name]) brandTotals[row.brand_name] = 0;
+                brandTotals[row.brand_name] += (row.amount || 0);
+            });
+
+            // Find Top Brand
+            let topBrand = '-';
+            let topBrandSales = 0;
+            Object.keys(brandTotals).forEach(b => {
+                if (brandTotals[b] > topBrandSales) {
+                    topBrand = b;
+                    topBrandSales = brandTotals[b];
+                }
+            });
+            topBrandEl.textContent = topBrand;
+            topBrandSalesEl.textContent = `RM ${topBrandSales.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in sales`;
+
+            // 3. Calculate Daily Totals
+            const dailyTotals = {};
+            data.forEach(row => {
+                if (!dailyTotals[row.sale_date]) dailyTotals[row.sale_date] = 0;
+                dailyTotals[row.sale_date] += (row.amount || 0);
+            });
+
+            // Find Best Day
+            let bestDay = '-';
+            let bestDaySales = 0;
+            Object.keys(dailyTotals).forEach(d => {
+                if (dailyTotals[d] > bestDaySales) {
+                    bestDay = d;
+                    bestDaySales = dailyTotals[d];
+                }
+            });
+            
+            if (bestDay !== '-') {
+                const bd = parseLocalDate(bestDay);
+                bestDayEl.textContent = bd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                bestDaySalesEl.textContent = `RM ${bestDaySales.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in sales`;
+            } else {
+                bestDayEl.textContent = '-';
+                bestDaySalesEl.textContent = 'RM 0.00 in sales';
+            }
+
+            // 4. Render Bar Chart (Brands)
+            if (brandChartInstance) brandChartInstance.destroy();
+            const brandLabels = Object.keys(brandTotals).sort((a, b) => brandTotals[b] - brandTotals[a]);
+            const brandData = brandLabels.map(b => brandTotals[b]);
+            
+            const ctxBar = document.getElementById('brandChart').getContext('2d');
+            brandChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: brandLabels,
+                    datasets: [{
+                        label: 'Total Sales (RM)',
+                        data: brandData,
+                        backgroundColor: '#1c4a3b',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // 5. Render Line Chart (Daily Trend)
+            if (dailyChartInstance) dailyChartInstance.destroy();
+            const start = parseLocalDate(event.start_date);
+            const endInc = parseLocalDate(event.end_date);
+            endInc.setDate(endInc.getDate() - 1);
+
+            const dateLabels = [];
+            const dailyData = [];
+            let current = new Date(start);
+            while (current <= endInc) {
+                const dStr = formatLocalDate(current);
+                dateLabels.push(current.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+                dailyData.push(dailyTotals[dStr] || 0);
+                current.setDate(current.getDate() + 1);
+            }
+
+            const ctxLine = document.getElementById('dailyChart').getContext('2d');
+            dailyChartInstance = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: dateLabels,
+                    datasets: [{
+                        label: 'Daily Sales (RM)',
+                        data: dailyData,
+                        borderColor: '#2980b9',
+                        backgroundColor: 'rgba(41, 128, 185, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#2980b9',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
     </script>
 </body>
 </html>
