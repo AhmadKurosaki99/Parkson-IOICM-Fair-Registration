@@ -137,6 +137,8 @@
         .btn-export:hover { background: #219653; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
         .btn-fill { background: #f39c12; }
         .btn-fill:hover { background: #e67e22; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); }
+        .btn-zero { background: #7f8c8d; }
+        .btn-zero:hover { background: #95a5a6; box-shadow: 0 4px 10px rgba(127, 140, 141, 0.3); }
         
         .grand-total-card { background: var(--parkson-green); color: white; padding: 10px 20px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; min-width: 150px; box-shadow: 0 4px 12px rgba(28, 74, 59, 0.2); }
         .grand-total-card span { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; font-weight: 700; }
@@ -228,6 +230,9 @@
         .toast.error { background: #e74c3c; }
         .empty-state { text-align: center; color: #999; padding: 40px 20px; font-style: italic; }
 
+        /* --- MOBILE CARD VIEW STYLES (IDEA 20) --- */
+        .mobile-card-view { display: none; }
+
         @media (max-width: 1024px) {
             .reports-grid { grid-template-columns: 1fr; }
             .charts-container { grid-template-columns: 1fr; }
@@ -246,10 +251,26 @@
             .tab-btn { padding: 12px 15px; font-size: 13px; }
             header h1 { font-size: 16px; }
             .card { padding: 15px; }
-            .grid-input { width: 70px; font-size: 12px; }
-            .sales-table td:nth-child(2), .sales-table th:nth-child(2) { position: static; }
-            .sales-table td:first-child, .sales-table th:first-child { position: static; }
             .stat-next-event h3, .stat-health-title { font-size: 18px !important; }
+
+            /* Hide desktop grid, show mobile card view */
+            .sales-grid-wrapper { display: none; }
+            .mobile-card-view { display: block; margin-top: 15px; }
+            
+            .mobile-day-card { background: white; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
+            .mobile-day-header { background: #f8f9fa; padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+            .mobile-day-title { font-weight: 700; color: var(--parkson-green); font-size: 15px; }
+            .mobile-day-date { font-size: 13px; color: var(--text-light); font-weight: 600; }
+            
+            .mobile-brand-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f0f0f0; }
+            .mobile-brand-row:last-child { border-bottom: none; }
+            .mobile-brand-name { font-weight: 600; font-size: 14px; color: #333; display: flex; align-items: center; gap: 8px; }
+            .mobile-brand-input { width: 120px; margin: 0; padding: 8px 10px; text-align: right; border: 1px solid #ccc; border-radius: 4px; font-weight: 700; color: var(--parkson-green); }
+            
+            .mobile-day-footer { background: #f4f8fb; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: var(--parkson-green); font-size: 15px; border-top: 2px solid #eee; }
+            .mobile-pos-ref { margin-top: 10px; padding: 0 15px 15px 15px; }
+            .mobile-pos-ref label { font-size: 11px; margin-top: 0; margin-bottom: 5px; }
+            .mobile-pos-ref input { margin: 0; padding: 8px; font-size: 13px; }
         }
     </style>
 </head>
@@ -341,7 +362,6 @@
         <div class="container" style="flex-direction: column;">
             <div class="card" style="width: 100%; box-sizing: border-box;">
                 
-                <!-- NEW: Quick Nav -->
                 <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
                     <h2 style="margin:0; border:none; padding:0;">Sales Tracker</h2>
                     <div>
@@ -363,6 +383,7 @@
                     </div>
                     <div class="sales-actions">
                         <button id="autoFillBtn" class="btn-action btn-fill" title="Copy the first entered number to all empty days for that brand">✨ Auto-Fill</button>
+                        <button id="zeroFillBtn" class="btn-action btn-zero" title="Fill all completely empty cells with 0">0️⃣ Zero-Out</button>
                         <button id="exportBtn" class="btn-action btn-export">⬇ Export</button>
                         <div class="grand-total-card">
                             <span>Grand Total</span>
@@ -370,12 +391,20 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- DESKTOP VIEW -->
                 <div class="sales-grid-wrapper">
                     <table class="sales-table" id="salesGrid">
                         <thead id="salesGridHead"></thead>
                         <tbody id="salesGridBody"></tbody>
                     </table>
                 </div>
+
+                <!-- MOBILE VIEW (IDEA 20) -->
+                <div class="mobile-card-view" id="mobileSalesGrid">
+                    <!-- Rendered dynamically via JS -->
+                </div>
+
             </div>
         </div>
     </div>
@@ -384,7 +413,6 @@
     <div id="tab-reports" class="tab-content">
         <div class="container" style="flex-direction: column;">
             
-            <!-- NEW: Quick Nav -->
             <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <h2 style="margin:0; border:none; padding:0;">Reports & Analytics</h2>
                 <div>
@@ -440,7 +468,6 @@
         const DEFAULT_DEPARTMENT = 'Dept 44';
         const DEFAULT_POS_REF = '327';
 
-        // Local Storage Keys
         const LS_TAB_KEY = 'parkson_active_tab';
         const LS_SALES_EVENT = 'parkson_active_sales_event';
         const LS_REPORTS_EVENT = 'parkson_active_reports_event';
@@ -522,7 +549,6 @@
             document.getElementById('tab-' + tabId).classList.add('active');
             btn.classList.add('active');
             
-            // Save to Local Storage
             localStorage.setItem(LS_TAB_KEY, tabId);
 
             if (tabId === 'sales') { loadSalesEventsDropdown('salesEventSelect'); } 
@@ -913,7 +939,6 @@
                 calendar.render();
             }
             loadData().then(() => {
-                // Load saved tab after data is loaded
                 const savedTab = localStorage.getItem(LS_TAB_KEY) || 'registration';
                 const tabBtn = document.querySelector(`.tab-btn[data-tab="${savedTab}"]`);
                 if (tabBtn) tabBtn.click();
@@ -941,7 +966,6 @@
             const select = document.getElementById(selectId);
             if (!select) return;
             
-            // Use Local Storage to remember the selected event
             const lsKey = selectId === 'salesEventSelect' ? LS_SALES_EVENT : LS_REPORTS_EVENT;
             const savedEvent = localStorage.getItem(lsKey);
             const currentVal = savedEvent || select.value;
@@ -954,7 +978,6 @@
                 select.appendChild(opt);
             });
             
-            // 1. If we have a saved event that still exists, use it
             if (currentVal && savedEvents.some(e => e.title === currentVal)) {
                 select.value = currentVal;
                 if (selectId === 'salesEventSelect') loadSalesGrid(); 
@@ -962,7 +985,6 @@
                 return;
             }
 
-            // 2. If no saved event, auto-pick the active or most recent event
             if (savedEvents.length > 0) {
                 const today = getTodayMidnight();
                 let activeEvent = savedEvents.find(e => {
@@ -993,10 +1015,11 @@
             const eventTitle = salesEventSelect.value;
             const headEl = document.getElementById('salesGridHead');
             const bodyEl = document.getElementById('salesGridBody');
+            const mobileEl = document.getElementById('mobileSalesGrid');
             const floatingTotalEl = document.getElementById('floatingGrandTotal');
 
             if (!eventTitle) {
-                headEl.innerHTML = ''; bodyEl.innerHTML = ''; currentSalesData = []; currentSalesEvent = null; 
+                headEl.innerHTML = ''; bodyEl.innerHTML = ''; mobileEl.innerHTML = ''; currentSalesData = []; currentSalesEvent = null; 
                 floatingTotalEl.textContent = 'RM 0.00';
                 return;
             }
@@ -1025,6 +1048,7 @@
 
             const todayStr = formatLocalDate(getTodayMidnight());
 
+            // --- DESKTOP VIEW ---
             let headHtml = `<tr><th style="min-width: 90px;">Date</th><th style="min-width: 60px;">Day</th>`;
             brands.forEach(b => { 
                 headHtml += `<th>
@@ -1040,6 +1064,7 @@
             headEl.innerHTML = headHtml;
 
             let bodyHtml = '';
+            let mobileHtml = '';
             const brandTotals = {};
             brands.forEach(b => brandTotals[b] = 0);
             let grandTotal = 0;
@@ -1058,6 +1083,7 @@
                 let rowTotal = 0;
                 let posRef = '-';
 
+                // Build Desktop Row
                 bodyHtml += `<tr class="${rowClass}"><td>${displayDate}</td><td>${dayName}</td>`;
                 brands.forEach(b => {
                     const entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
@@ -1071,12 +1097,39 @@
                 bodyHtml += `<td class="col-daily-total"><input type="number" class="grid-input" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly></td>`;
                 bodyHtml += `<td><input type="text" class="grid-input pos-ref-input" data-date="${dateStr}" data-event="${escapeHtml(eventTitle)}" value="${escapeHtml(posRef)}" style="width:80px;"></td>`;
                 bodyHtml += `</tr>`;
+
+                // Build Mobile Card
+                mobileHtml += `<div class="mobile-day-card ${rowClass}">
+                    <div class="mobile-day-header">
+                        <span class="mobile-day-title">${dayName}</span>
+                        <span class="mobile-day-date">${displayDate}</span>
+                    </div>`;
+                
+                brands.forEach(b => {
+                    const entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
+                    const val = entry ? entry.amount : 0;
+                    mobileHtml += `<div class="mobile-brand-row">
+                        <div class="mobile-brand-name">${escapeHtml(b)}</div>
+                        <input type="number" class="mobile-brand-input grid-input" data-date="${dateStr}" data-brand="${escapeHtml(b)}" data-event="${escapeHtml(eventTitle)}" value="${val > 0 ? val : ''}" placeholder="0.00">
+                    </div>`;
+                });
+
+                mobileHtml += `<div class="mobile-day-footer">
+                        <span>Total:</span>
+                        <span>RM ${rowTotal.toFixed(2)}</span>
+                    </div>
+                    <div class="mobile-pos-ref">
+                        <label>POS Number:</label>
+                        <input type="text" class="grid-input pos-ref-input" data-date="${dateStr}" data-event="${escapeHtml(eventTitle)}" value="${escapeHtml(posRef)}">
+                    </div>
+                </div>`;
             });
 
             bodyHtml += `<tr class="total-row"><td colspan="2">TOTAL</td>`;
             brands.forEach(b => { bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`; });
             bodyHtml += `<td class="grand-total-cell">RM ${grandTotal.toFixed(2)}</td><td></td></tr>`;
             bodyEl.innerHTML = bodyHtml;
+            mobileEl.innerHTML = mobileHtml;
 
             floatingTotalEl.textContent = `RM ${grandTotal.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
@@ -1119,29 +1172,19 @@
             saveTimers.set(key, setTimeout(fn, delay));
         }
 
-        // --- KEYBOARD NAVIGATION (IDEA 3) ---
         document.getElementById('salesGridBody').addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown' || e.key === 'Enter') {
                 if (e.target.matches('.grid-input[data-brand]')) {
                     e.preventDefault();
-                    const date = e.target.dataset.date;
                     const brand = e.target.dataset.brand;
-                    // Find the next input with the same brand
                     const allInputs = Array.from(document.querySelectorAll(`.grid-input[data-brand="${brand}"]`));
                     const idx = allInputs.indexOf(e.target);
-                    if (idx > -1 && idx < allInputs.length - 1) {
-                        allInputs[idx + 1].focus();
-                        allInputs[idx + 1].select();
-                    }
+                    if (idx > -1 && idx < allInputs.length - 1) { allInputs[idx + 1].focus(); allInputs[idx + 1].select(); }
                 } else if (e.target.matches('.pos-ref-input')) {
                     e.preventDefault();
-                    const date = e.target.dataset.date;
                     const allInputs = Array.from(document.querySelectorAll(`.pos-ref-input`));
                     const idx = allInputs.indexOf(e.target);
-                    if (idx > -1 && idx < allInputs.length - 1) {
-                        allInputs[idx + 1].focus();
-                        allInputs[idx + 1].select();
-                    }
+                    if (idx > -1 && idx < allInputs.length - 1) { allInputs[idx + 1].focus(); allInputs[idx + 1].select(); }
                 }
             } else if (e.key === 'ArrowUp') {
                 if (e.target.matches('.grid-input[data-brand]')) {
@@ -1149,23 +1192,51 @@
                     const brand = e.target.dataset.brand;
                     const allInputs = Array.from(document.querySelectorAll(`.grid-input[data-brand="${brand}"]`));
                     const idx = allInputs.indexOf(e.target);
-                    if (idx > 0) {
-                        allInputs[idx - 1].focus();
-                        allInputs[idx - 1].select();
-                    }
+                    if (idx > 0) { allInputs[idx - 1].focus(); allInputs[idx - 1].select(); }
                 } else if (e.target.matches('.pos-ref-input')) {
                     e.preventDefault();
                     const allInputs = Array.from(document.querySelectorAll(`.pos-ref-input`));
                     const idx = allInputs.indexOf(e.target);
-                    if (idx > 0) {
-                        allInputs[idx - 1].focus();
-                        allInputs[idx - 1].select();
-                    }
+                    if (idx > 0) { allInputs[idx - 1].focus(); allInputs[idx - 1].select(); }
                 }
             }
         });
 
         document.getElementById('salesGridBody').addEventListener('change', (e) => {
+            const target = e.target;
+            if (target.matches('.grid-input[data-brand]')) {
+                const { date, brand, event } = target.dataset;
+                debouncedSave(`cell-${date}-${brand}`, () => updateCell(date, brand, target.value, event));
+                return;
+            }
+            if (target.matches('.pos-ref-input')) {
+                const { date, event } = target.dataset;
+                debouncedSave(`pos-${date}`, () => updatePosRef(date, target.value, event));
+            }
+        });
+
+        // Attach same events for mobile inputs
+        document.getElementById('mobileSalesGrid').addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                if (e.target.matches('.grid-input[data-brand]')) {
+                    e.preventDefault();
+                    const brand = e.target.dataset.brand;
+                    const allInputs = Array.from(document.querySelectorAll(`.mobile-brand-input[data-brand="${brand}"]`));
+                    const idx = allInputs.indexOf(e.target);
+                    if (idx > -1 && idx < allInputs.length - 1) { allInputs[idx + 1].focus(); allInputs[idx + 1].select(); }
+                }
+            } else if (e.key === 'ArrowUp') {
+                if (e.target.matches('.grid-input[data-brand]')) {
+                    e.preventDefault();
+                    const brand = e.target.dataset.brand;
+                    const allInputs = Array.from(document.querySelectorAll(`.mobile-brand-input[data-brand="${brand}"]`));
+                    const idx = allInputs.indexOf(e.target);
+                    if (idx > 0) { allInputs[idx - 1].focus(); allInputs[idx - 1].select(); }
+                }
+            }
+        });
+
+        document.getElementById('mobileSalesGrid').addEventListener('change', (e) => {
             const target = e.target;
             if (target.matches('.grid-input[data-brand]')) {
                 const { date, brand, event } = target.dataset;
@@ -1292,6 +1363,48 @@
                 await loadSalesGrid();
                 await loadData(); // Refresh health check
             } catch (err) { showError('Auto-fill failed: ' + (err.message || 'unknown error')); console.error(err); }
+        });
+
+        // --- ZERO OUT EMPTY (IDEA 18) ---
+        document.getElementById('zeroFillBtn').addEventListener('click', async () => {
+            if (!currentSalesEvent || currentSalesData.length === 0) { showError("No data to process."); return; }
+            if (!confirm('This will fill any COMPLETELY EMPTY cells in the grid with a 0. Proceed?')) return;
+
+            const eventTitle = currentSalesEvent.title;
+            const start = parseLocalDate(currentSalesEvent.start_date);
+            const endInc = parseLocalDate(currentSalesEvent.end_date);
+            endInc.setDate(endInc.getDate() - 1);
+
+            const dates = [];
+            let current = new Date(start);
+            while (current <= endInc) {
+                dates.push(formatLocalDate(current));
+                current.setDate(current.getDate() + 1);
+            }
+
+            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
+            let inserts = [];
+
+            brands.forEach(b => {
+                dates.forEach(d => {
+                    const exists = currentSalesData.find(s => s.sale_date === d && s.brand_name === b);
+                    if (!exists) {
+                        inserts.push({
+                            event_title: eventTitle, department: DEFAULT_DEPARTMENT, sale_date: d, brand_name: b, amount: 0, pos_ref: DEFAULT_POS_REF
+                        });
+                    }
+                });
+            });
+
+            if (inserts.length === 0) { toast("No empty cells found to zero-out."); return; }
+
+            try {
+                const { error } = await db.from('fair_daily_sales').insert(inserts);
+                if (error) throw error;
+                toast(`Zeroed-out ${inserts.length} empty cells!`);
+                await loadSalesGrid();
+                await loadData(); // Refresh health check
+            } catch (err) { showError('Zero-out failed: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
         document.getElementById('exportBtn').addEventListener('click', () => {
