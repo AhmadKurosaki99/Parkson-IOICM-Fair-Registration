@@ -77,7 +77,6 @@
         .stat-box h3 { margin: 0; font-size: 32px; color: var(--parkson-green); font-weight: 700; }
         .stat-box p { margin: 5px 0 0 0; font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
         
-        /* Next Event Stat Box */
         .stat-next-event h3 { font-size: 20px !important; margin-bottom: 4px; line-height: 1.2; }
         .stat-next-event p { font-size: 11px !important; }
         .stat-next-active { border-left: 4px solid var(--parkson-green); }
@@ -87,7 +86,6 @@
         .stat-next-none { border-left: 4px solid #95a5a6; }
         .stat-next-none h3 { color: #95a5a6 !important; }
 
-        /* Data Health (Missing Sales) Stat Box */
         .stat-health-ok { border-left: 4px solid var(--parkson-green); }
         .stat-health-ok h3 { color: var(--parkson-green) !important; }
         .stat-health-warning { border-left: 4px solid var(--warning-orange); background: var(--warning-orange-light); }
@@ -201,6 +199,10 @@
         .chart-card h3 { margin: 0 0 15px 0; font-size: 15px; color: var(--text-dark); font-weight: 700; text-transform: uppercase; }
         .chart-wrapper { position: relative; flex: 1; min-height: 0; }
 
+        /* Nav Quick Links */
+        .quick-nav-btn { background: transparent; color: var(--parkson-green); border: 1px solid var(--parkson-green); padding: 6px 12px; font-size: 12px; border-radius: 4px; cursor: pointer; width: auto; margin: 0 5px 0 0; transition: all 0.2s; text-transform: none; letter-spacing: 0; }
+        .quick-nav-btn:hover { background: var(--parkson-green-light); transform: none; box-shadow: none; }
+
         #calendar { font-family: 'Segoe UI', sans-serif; }
         .fc-toolbar { margin-bottom: 20px !important; display: flex; align-items: center; justify-content: space-between; }
         .fc-toolbar-title { font-size: 18px !important; font-weight: 700 !important; color: var(--text-dark); text-transform: uppercase; }
@@ -259,14 +261,14 @@
         <p>Promotion &amp; Fair Registration System</p>
     </header>
 
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="registration">Event Registration</button>
+    <div class="tabs" id="mainTabs">
+        <button class="tab-btn" data-tab="registration">Event Registration</button>
         <button class="tab-btn" data-tab="sales">Sales Tracker</button>
         <button class="tab-btn" data-tab="reports">Reports &amp; Analytics</button>
     </div>
 
     <!-- TAB 1: REGISTRATION -->
-    <div id="tab-registration" class="tab-content active">
+    <div id="tab-registration" class="tab-content">
         <div class="container">
             <div class="card calendar-card">
                 <h2>Promotion Calendar</h2>
@@ -303,9 +305,7 @@
             <div class="card table-card">
                 <h2>Dashboard &amp; Registrations</h2>
                 
-                <!-- UPDATED STAT BOXES -->
                 <div class="dashboard-stats">
-                    <!-- NEW DATA HEALTH BOX -->
                     <div class="stat-box stat-health-ok" id="healthBox">
                         <h3 id="healthTitle" class="stat-health-title">All Good!</h3>
                         <p id="healthSubtitle">Sales up to date</p>
@@ -340,7 +340,16 @@
     <div id="tab-sales" class="tab-content">
         <div class="container" style="flex-direction: column;">
             <div class="card" style="width: 100%; box-sizing: border-box;">
-                <h2>Sales Tracker (Premium View)</h2>
+                
+                <!-- NEW: Quick Nav -->
+                <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin:0; border:none; padding:0;">Sales Tracker</h2>
+                    <div>
+                        <button class="quick-nav-btn" onclick="document.querySelector('[data-tab=\'registration\']').click()">← View Dashboard</button>
+                        <button class="quick-nav-btn" onclick="document.querySelector('[data-tab=\'reports\']').click()">View Reports →</button>
+                    </div>
+                </div>
+
                 <div class="sales-header-bar">
                     <div class="sales-event-selector">
                         <label>Selected Event:</label>
@@ -374,6 +383,15 @@
     <!-- TAB 3: REPORTS & ANALYTICS -->
     <div id="tab-reports" class="tab-content">
         <div class="container" style="flex-direction: column;">
+            
+            <!-- NEW: Quick Nav -->
+            <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h2 style="margin:0; border:none; padding:0;">Reports & Analytics</h2>
+                <div>
+                    <button class="quick-nav-btn" onclick="document.querySelector('[data-tab=\'sales\']').click()">← Back to Tracker</button>
+                </div>
+            </div>
+
             <div class="reports-controls">
                 <label style="margin:0; font-weight:bold; color: var(--parkson-green);">Select Event to Analyze:</label>
                 <select id="reportsEventSelect">
@@ -422,6 +440,11 @@
         const DEFAULT_DEPARTMENT = 'Dept 44';
         const DEFAULT_POS_REF = '327';
 
+        // Local Storage Keys
+        const LS_TAB_KEY = 'parkson_active_tab';
+        const LS_SALES_EVENT = 'parkson_active_sales_event';
+        const LS_REPORTS_EVENT = 'parkson_active_reports_event';
+
         let db;
         try {
             const { createClient } = supabase;
@@ -435,7 +458,7 @@
         let sortAscending = true;
         let currentSalesData = [];
         let currentSalesEvent = null;
-        let allSalesData = []; // Used for the Data Health check
+        let allSalesData = []; 
         
         let brandChartInstance = null;
         let dailyChartInstance = null;
@@ -499,6 +522,9 @@
             document.getElementById('tab-' + tabId).classList.add('active');
             btn.classList.add('active');
             
+            // Save to Local Storage
+            localStorage.setItem(LS_TAB_KEY, tabId);
+
             if (tabId === 'sales') { loadSalesEventsDropdown('salesEventSelect'); } 
             else if (tabId === 'reports') { loadSalesEventsDropdown('reportsEventSelect'); }
             else if (tabId === 'registration' && calendar) { calendar.render(); }
@@ -561,7 +587,6 @@
                 registrations = regData || [];
                 filteredRegistrations = registrations;
                 
-                // Fetch all sales for the health check
                 const { data: salesData, error: salesErr } = await db.from('fair_daily_sales').select('event_title, sale_date, amount');
                 if (!salesErr) { allSalesData = salesData || []; }
 
@@ -571,7 +596,6 @@
             } catch (err) { showError('Network error while loading data.'); console.error(err); }
         }
 
-        // --- NEW: DATA HEALTH CHECK ---
         function updateDataHealthStat() {
             const box = document.getElementById('healthBox');
             const titleEl = document.getElementById('healthTitle');
@@ -582,7 +606,6 @@
             const today = getTodayMidnight();
             const todayStr = formatLocalDate(today);
 
-            // Find all events that are happening TODAY
             const activeEvents = savedEvents.filter(e => {
                 const start = parseLocalDate(e.start_date);
                 const endInc = parseLocalDate(e.end_date);
@@ -597,7 +620,6 @@
                 return;
             }
 
-            // Check if each active event has sales data for today
             let missingEvents = [];
             activeEvents.forEach(ev => {
                 const hasSalesToday = allSalesData.some(s => s.event_title === ev.title && s.sale_date === todayStr && s.amount > 0);
@@ -890,7 +912,12 @@
                 });
                 calendar.render();
             }
-            loadData();
+            loadData().then(() => {
+                // Load saved tab after data is loaded
+                const savedTab = localStorage.getItem(LS_TAB_KEY) || 'registration';
+                const tabBtn = document.querySelector(`.tab-btn[data-tab="${savedTab}"]`);
+                if (tabBtn) tabBtn.click();
+            });
             setInterval(loadData, 3600000); 
         });
 
@@ -913,7 +940,12 @@
         function loadSalesEventsDropdown(selectId) {
             const select = document.getElementById(selectId);
             if (!select) return;
-            const currentVal = select.value;
+            
+            // Use Local Storage to remember the selected event
+            const lsKey = selectId === 'salesEventSelect' ? LS_SALES_EVENT : LS_REPORTS_EVENT;
+            const savedEvent = localStorage.getItem(lsKey);
+            const currentVal = savedEvent || select.value;
+
             select.innerHTML = '<option value="">Select an Event...</option>';
             savedEvents.forEach(e => {
                 const opt = document.createElement('option');
@@ -922,7 +954,16 @@
                 select.appendChild(opt);
             });
             
-            if (!currentVal && savedEvents.length > 0) {
+            // 1. If we have a saved event that still exists, use it
+            if (currentVal && savedEvents.some(e => e.title === currentVal)) {
+                select.value = currentVal;
+                if (selectId === 'salesEventSelect') loadSalesGrid(); 
+                if (selectId === 'reportsEventSelect') loadReports();
+                return;
+            }
+
+            // 2. If no saved event, auto-pick the active or most recent event
+            if (savedEvents.length > 0) {
                 const today = getTodayMidnight();
                 let activeEvent = savedEvents.find(e => {
                     const start = parseLocalDate(e.start_date);
@@ -936,15 +977,17 @@
                 }
                 if (activeEvent) { 
                     select.value = activeEvent.title; 
+                    localStorage.setItem(lsKey, activeEvent.title);
                     if (selectId === 'salesEventSelect') loadSalesGrid(); 
                     if (selectId === 'reportsEventSelect') loadReports();
                 }
-            } else if (currentVal) {
-                select.value = currentVal;
             }
         }
 
-        salesEventSelect.addEventListener('change', () => loadSalesGrid());
+        salesEventSelect.addEventListener('change', () => {
+            localStorage.setItem(LS_SALES_EVENT, salesEventSelect.value);
+            loadSalesGrid();
+        });
 
         async function loadSalesGrid() {
             const eventTitle = salesEventSelect.value;
@@ -1075,6 +1118,52 @@
             clearTimeout(saveTimers.get(key));
             saveTimers.set(key, setTimeout(fn, delay));
         }
+
+        // --- KEYBOARD NAVIGATION (IDEA 3) ---
+        document.getElementById('salesGridBody').addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                if (e.target.matches('.grid-input[data-brand]')) {
+                    e.preventDefault();
+                    const date = e.target.dataset.date;
+                    const brand = e.target.dataset.brand;
+                    // Find the next input with the same brand
+                    const allInputs = Array.from(document.querySelectorAll(`.grid-input[data-brand="${brand}"]`));
+                    const idx = allInputs.indexOf(e.target);
+                    if (idx > -1 && idx < allInputs.length - 1) {
+                        allInputs[idx + 1].focus();
+                        allInputs[idx + 1].select();
+                    }
+                } else if (e.target.matches('.pos-ref-input')) {
+                    e.preventDefault();
+                    const date = e.target.dataset.date;
+                    const allInputs = Array.from(document.querySelectorAll(`.pos-ref-input`));
+                    const idx = allInputs.indexOf(e.target);
+                    if (idx > -1 && idx < allInputs.length - 1) {
+                        allInputs[idx + 1].focus();
+                        allInputs[idx + 1].select();
+                    }
+                }
+            } else if (e.key === 'ArrowUp') {
+                if (e.target.matches('.grid-input[data-brand]')) {
+                    e.preventDefault();
+                    const brand = e.target.dataset.brand;
+                    const allInputs = Array.from(document.querySelectorAll(`.grid-input[data-brand="${brand}"]`));
+                    const idx = allInputs.indexOf(e.target);
+                    if (idx > 0) {
+                        allInputs[idx - 1].focus();
+                        allInputs[idx - 1].select();
+                    }
+                } else if (e.target.matches('.pos-ref-input')) {
+                    e.preventDefault();
+                    const allInputs = Array.from(document.querySelectorAll(`.pos-ref-input`));
+                    const idx = allInputs.indexOf(e.target);
+                    if (idx > 0) {
+                        allInputs[idx - 1].focus();
+                        allInputs[idx - 1].select();
+                    }
+                }
+            }
+        });
 
         document.getElementById('salesGridBody').addEventListener('change', (e) => {
             const target = e.target;
@@ -1242,7 +1331,10 @@
         // ==========================================
         // TAB 3: REPORTS & ANALYTICS LOGIC
         // ==========================================
-        reportsEventSelect.addEventListener('change', () => loadReports());
+        reportsEventSelect.addEventListener('change', () => {
+            localStorage.setItem(LS_REPORTS_EVENT, reportsEventSelect.value);
+            loadReports();
+        });
 
         async function loadReports() {
             const eventTitle = reportsEventSelect.value;
