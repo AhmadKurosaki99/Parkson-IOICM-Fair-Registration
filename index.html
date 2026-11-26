@@ -7,7 +7,6 @@
 
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Chart.js for the new Reports Tab -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -20,6 +19,8 @@
             --bg-color: #f4f6f8;
             --text-dark: #333333;
             --text-light: #666666;
+            --warning-orange: #e67e22;
+            --warning-orange-light: #fef5e7;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -76,6 +77,7 @@
         .stat-box h3 { margin: 0; font-size: 32px; color: var(--parkson-green); font-weight: 700; }
         .stat-box p { margin: 5px 0 0 0; font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
         
+        /* Next Event Stat Box */
         .stat-next-event h3 { font-size: 20px !important; margin-bottom: 4px; line-height: 1.2; }
         .stat-next-event p { font-size: 11px !important; }
         .stat-next-active { border-left: 4px solid var(--parkson-green); }
@@ -84,6 +86,14 @@
         .stat-next-upcoming h3 { color: var(--edit-blue) !important; }
         .stat-next-none { border-left: 4px solid #95a5a6; }
         .stat-next-none h3 { color: #95a5a6 !important; }
+
+        /* Data Health (Missing Sales) Stat Box */
+        .stat-health-ok { border-left: 4px solid var(--parkson-green); }
+        .stat-health-ok h3 { color: var(--parkson-green) !important; }
+        .stat-health-warning { border-left: 4px solid var(--warning-orange); background: var(--warning-orange-light); }
+        .stat-health-warning h3 { color: var(--warning-orange) !important; }
+        .stat-health-warning p { color: #d35400 !important; }
+        .stat-health-title { font-size: 18px !important; line-height: 1.2; margin-bottom: 4px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         th { background-color: #fcfcfc; font-weight: 700; color: var(--text-light); padding: 15px; text-align: left; border-bottom: 2px solid #ddd; font-size: 12px; letter-spacing: 0.5px;}
@@ -237,7 +247,7 @@
             .grid-input { width: 70px; font-size: 12px; }
             .sales-table td:nth-child(2), .sales-table th:nth-child(2) { position: static; }
             .sales-table td:first-child, .sales-table th:first-child { position: static; }
-            .stat-next-event h3 { font-size: 18px !important; }
+            .stat-next-event h3, .stat-health-title { font-size: 18px !important; }
         }
     </style>
 </head>
@@ -292,13 +302,21 @@
 
             <div class="card table-card">
                 <h2>Dashboard &amp; Registrations</h2>
+                
+                <!-- UPDATED STAT BOXES -->
                 <div class="dashboard-stats">
-                    <div class="stat-box"><h3 id="totalRegs">0</h3><p>Total Registrations</p></div>
+                    <!-- NEW DATA HEALTH BOX -->
+                    <div class="stat-box stat-health-ok" id="healthBox">
+                        <h3 id="healthTitle" class="stat-health-title">All Good!</h3>
+                        <p id="healthSubtitle">Sales up to date</p>
+                    </div>
+
                     <div class="stat-box stat-next-event" id="nextEventBox">
                         <h3 id="nextEventTitle">Loading...</h3>
                         <p id="nextEventSubtitle">Checking schedule...</p>
                     </div>
                 </div>
+                
                 <button id="cleanupBtn" class="btn-cleanup">🧹 Remove Ghost Events (No Registration)</button>
                 <input type="text" id="searchBar" placeholder="Search/Filter...">
                 <table>
@@ -353,10 +371,9 @@
         </div>
     </div>
 
-    <!-- TAB 3: REPORTS & ANALYTICS (NEW) -->
+    <!-- TAB 3: REPORTS & ANALYTICS -->
     <div id="tab-reports" class="tab-content">
         <div class="container" style="flex-direction: column;">
-            
             <div class="reports-controls">
                 <label style="margin:0; font-weight:bold; color: var(--parkson-green);">Select Event to Analyze:</label>
                 <select id="reportsEventSelect">
@@ -396,7 +413,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -419,8 +435,8 @@
         let sortAscending = true;
         let currentSalesData = [];
         let currentSalesEvent = null;
+        let allSalesData = []; // Used for the Data Health check
         
-        // Chart.js variables to allow updating/destroying
         let brandChartInstance = null;
         let dailyChartInstance = null;
 
@@ -532,19 +548,75 @@
                 const { data: eventData, error: evErr } = await db.from('events').select('*');
                 if (evErr) { showError('Failed to load events: ' + evErr.message); return; }
                 savedEvents = eventData || [];
+                
                 if (calendar) {
                     calendar.removeAllEvents();
                     savedEvents.forEach(e => {
                         calendar.addEvent({ id: e.id, title: e.title, start: e.start_date, end: e.end_date, color: '#1c4a3b' });
                     });
                 }
+
                 const { data: regData, error: regErr } = await db.from('registrations').select('*').order('created_at', { ascending: false });
                 if (regErr) { showError('Failed to load registrations: ' + regErr.message); return; }
                 registrations = regData || [];
                 filteredRegistrations = registrations;
+                
+                // Fetch all sales for the health check
+                const { data: salesData, error: salesErr } = await db.from('fair_daily_sales').select('event_title, sale_date, amount');
+                if (!salesErr) { allSalesData = salesData || []; }
+
                 renderDashboard();
                 updateNextEventStat();
+                updateDataHealthStat();
             } catch (err) { showError('Network error while loading data.'); console.error(err); }
+        }
+
+        // --- NEW: DATA HEALTH CHECK ---
+        function updateDataHealthStat() {
+            const box = document.getElementById('healthBox');
+            const titleEl = document.getElementById('healthTitle');
+            const subEl = document.getElementById('healthSubtitle');
+            
+            box.className = 'stat-box stat-health-ok';
+
+            const today = getTodayMidnight();
+            const todayStr = formatLocalDate(today);
+
+            // Find all events that are happening TODAY
+            const activeEvents = savedEvents.filter(e => {
+                const start = parseLocalDate(e.start_date);
+                const endInc = parseLocalDate(e.end_date);
+                endInc.setDate(endInc.getDate() - 1);
+                return today >= start && today <= endInc;
+            });
+
+            if (activeEvents.length === 0) {
+                box.classList.add('stat-next-none');
+                titleEl.textContent = 'No Active Fairs';
+                subEl.textContent = 'Nothing running today';
+                return;
+            }
+
+            // Check if each active event has sales data for today
+            let missingEvents = [];
+            activeEvents.forEach(ev => {
+                const hasSalesToday = allSalesData.some(s => s.event_title === ev.title && s.sale_date === todayStr && s.amount > 0);
+                if (!hasSalesToday) missingEvents.push(ev.title);
+            });
+
+            if (missingEvents.length === 0) {
+                box.classList.add('stat-health-ok');
+                titleEl.textContent = 'All Good!';
+                subEl.textContent = 'Sales up to date today';
+            } else if (missingEvents.length === 1) {
+                box.classList.add('stat-health-warning');
+                titleEl.textContent = '1 Missing Entry';
+                subEl.textContent = `No sales for: ${missingEvents[0]}`;
+            } else {
+                box.classList.add('stat-health-warning');
+                titleEl.textContent = `${missingEvents.length} Missing Entries`;
+                subEl.textContent = `Check: ${missingEvents.slice(0,2).join(', ')}...`;
+            }
         }
 
         function updateNextEventStat() {
@@ -676,8 +748,6 @@
         cancelEditBtn.addEventListener('click', resetForm);
 
         function renderDashboard(dataToRender = filteredRegistrations) {
-            document.getElementById('totalRegs').innerText = dataToRender.length;
-
             if (dataToRender.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">No registrations yet.</td></tr>`;
                 return;
@@ -874,9 +944,6 @@
             }
         }
 
-        // ==========================================
-        // TAB 2: SALES GRID LOGIC
-        // ==========================================
         salesEventSelect.addEventListener('change', () => loadSalesGrid());
 
         async function loadSalesGrid() {
@@ -995,6 +1062,7 @@
                     if (error) throw error;
                     toast('Brand renamed successfully!');
                     await loadSalesGrid();
+                    await loadData(); // Refresh health check
                 } catch (err) { showError('Rename failed: ' + (err.message || 'unknown error')); targetTh.innerHTML = currentHtml; }
             };
 
@@ -1036,6 +1104,7 @@
                     if (error) throw error;
                 }
                 await loadSalesGrid();
+                await loadData(); // Refresh health check
             } catch (err) { showError('Failed to save cell: ' + (err.message || 'unknown error')); console.error(err); }
         }
 
@@ -1086,6 +1155,7 @@
                 if (error) throw error;
                 toast(`Brand "${brand}" deleted.`);
                 await loadSalesGrid();
+                await loadData(); // Refresh health check
             } catch (err) { showError('Failed to delete brand: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
@@ -1131,6 +1201,7 @@
                 if (error) throw error;
                 toast(`Auto-filled ${inserts.length} empty days!`);
                 await loadSalesGrid();
+                await loadData(); // Refresh health check
             } catch (err) { showError('Auto-fill failed: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
@@ -1200,19 +1271,16 @@
             
             const data = salesData || [];
 
-            // 1. Calculate Total Revenue
             let totalRevenue = 0;
             data.forEach(row => totalRevenue += (row.amount || 0));
             revenueEl.textContent = `RM ${totalRevenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-            // 2. Calculate Brand Totals
             const brandTotals = {};
             data.forEach(row => {
                 if (!brandTotals[row.brand_name]) brandTotals[row.brand_name] = 0;
                 brandTotals[row.brand_name] += (row.amount || 0);
             });
 
-            // Find Top Brand
             let topBrand = '-';
             let topBrandSales = 0;
             Object.keys(brandTotals).forEach(b => {
@@ -1224,14 +1292,12 @@
             topBrandEl.textContent = topBrand;
             topBrandSalesEl.textContent = `RM ${topBrandSales.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in sales`;
 
-            // 3. Calculate Daily Totals
             const dailyTotals = {};
             data.forEach(row => {
                 if (!dailyTotals[row.sale_date]) dailyTotals[row.sale_date] = 0;
                 dailyTotals[row.sale_date] += (row.amount || 0);
             });
 
-            // Find Best Day
             let bestDay = '-';
             let bestDaySales = 0;
             Object.keys(dailyTotals).forEach(d => {
@@ -1250,7 +1316,6 @@
                 bestDaySalesEl.textContent = 'RM 0.00 in sales';
             }
 
-            // 4. Render Bar Chart (Brands)
             if (brandChartInstance) brandChartInstance.destroy();
             const brandLabels = Object.keys(brandTotals).sort((a, b) => brandTotals[b] - brandTotals[a]);
             const brandData = brandLabels.map(b => brandTotals[b]);
@@ -1275,7 +1340,6 @@
                 }
             });
 
-            // 5. Render Line Chart (Daily Trend)
             if (dailyChartInstance) dailyChartInstance.destroy();
             const start = parseLocalDate(event.start_date);
             const endInc = parseLocalDate(event.end_date);
