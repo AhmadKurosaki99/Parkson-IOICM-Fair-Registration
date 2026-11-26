@@ -739,7 +739,7 @@
             brands.forEach(b => { 
                 headHtml += `<th><div class="brand-header"><span>${escapeHtml(b)}</span><button class="btn-del-brand" data-brand="${escapeHtml(b)}" title="Delete Brand">✕</button></div></th>`; 
             });
-            headHtml += `<th style="min-width: 110px;">Daily Total</th><th style="min-width: 80px;">POS Ref</th></tr>`;
+            headHtml += `<th style="min-width: 110px;">Daily Total</th><th style="min-width: 100px;">POS Number</th></tr>`;
             headEl.innerHTML = headHtml;
 
             let bodyHtml = '';
@@ -768,7 +768,7 @@
 
                 grandTotal += rowTotal;
                 bodyHtml += `<td><input type="number" class="grid-input" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly></td>`;
-                bodyHtml += `<td><input type="text" class="grid-input pos-ref-input" data-date="${dateStr}" data-event="${escapeHtml(eventTitle)}" value="${escapeHtml(posRef)}" style="width:70px;"></td>`;
+                bodyHtml += `<td><input type="text" class="grid-input pos-ref-input" data-date="${dateStr}" data-event="${escapeHtml(eventTitle)}" value="${escapeHtml(posRef)}" style="width:80px;"></td>`;
                 bodyHtml += `</tr>`;
             });
 
@@ -821,7 +821,7 @@
                 const { error } = await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
                 if (error) throw error;
                 await loadSalesGrid();
-            } catch (err) { showError('Failed to update POS ref: ' + (err.message || 'unknown error')); console.error(err); }
+            } catch (err) { showError('Failed to update POS Number: ' + (err.message || 'unknown error')); console.error(err); }
         }
 
         document.getElementById('addBrandBtn').addEventListener('click', addBrandColumn);
@@ -848,7 +848,6 @@
             } catch (err) { showError('Failed to add brand: ' + (err.message || 'unknown error')); console.error(err); }
         }
 
-        // --- DELETE BRAND (IDEA 1) ---
         document.getElementById('salesGridHead').addEventListener('click', async (e) => {
             const btn = e.target.closest('.btn-del-brand');
             if (!btn) return;
@@ -865,7 +864,6 @@
             } catch (err) { showError('Failed to delete brand: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
-        // --- AUTO-FILL (IDEA 3) ---
         document.getElementById('autoFillBtn').addEventListener('click', async () => {
             if (!currentSalesEvent || currentSalesData.length === 0) { showError("No data to auto-fill."); return; }
             if (!confirm('This will copy the first entered number to all EMPTY days for each brand. Proceed?')) return;
@@ -886,7 +884,6 @@
             let inserts = [];
 
             brands.forEach(b => {
-                // Find the first non-zero entry for this brand
                 const firstEntry = dates.map(d => currentSalesData.find(s => s.sale_date === d && s.brand_name === b)).find(s => s && s.amount > 0);
                 
                 if (firstEntry) {
@@ -912,14 +909,12 @@
             } catch (err) { showError('Auto-fill failed: ' + (err.message || 'unknown error')); console.error(err); }
         });
 
-        // --- EXPORT TO EXCEL (IDEA 5) ---
         document.getElementById('exportBtn').addEventListener('click', () => {
             if (!currentSalesEvent) { showError('Please select an event first.'); return; }
             
             const table = document.getElementById('salesGrid');
             let csvContent = "";
             
-            // Loop through rows and cells
             for (let i = 0; i < table.rows.length; i++) {
                 let rowData = [];
                 for (let j = 0; j < table.rows[i].cells.length; j++) {
@@ -927,21 +922,16 @@
                     const input = cell.querySelector('input');
                     
                     if (input) {
-                        // Use input value if it exists, otherwise empty string
                         rowData.push(input.value ? input.value : '0');
                     } else {
-                        // Use text content, strip out the 'RM ' from totals
                         let text = cell.innerText.replace('RM ', '').trim();
-                        // Remove the 'X' from brand headers
                         if (j > 1 && i === 0) text = text.replace('✕', '').trim();
                         rowData.push(text);
                     }
                 }
-                // Join columns with comma, wrap in quotes to handle commas in numbers if any
                 csvContent += rowData.map(val => `"${val}"`).join(",") + "\n";
             }
 
-            // Create download link
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
