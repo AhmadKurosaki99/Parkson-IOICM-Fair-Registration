@@ -1330,7 +1330,7 @@
         }
     </style>
 </head>
-<body data-active-tab="registration">
+<body data-active-tab="home">
 
     <div class="app-shell">
         <aside class="sidebar" id="sidebar">
@@ -1346,7 +1346,14 @@
                 <div class="sidebar-section">
                     <div class="sidebar-section-label">Main</div>
 
-                    <button class="sidebar-nav-item active" data-tab="registration" data-tooltip="Event Registration">
+                    <button class="sidebar-nav-item active" data-tab="home" data-tooltip="Home">
+                        <span class="sidebar-nav-icon">
+                            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                        </span>
+                        <span class="sidebar-nav-label">Home</span>
+                    </button>
+
+                    <button class="sidebar-nav-item" data-tab="registration" data-tooltip="Event Registration">
                         <span class="sidebar-nav-icon">
                             <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
                         </span>
@@ -1414,7 +1421,7 @@
                     <button class="mobile-menu-btn" id="mobileMenuBtn" title="Open menu" aria-label="Open menu">
                         <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
                     </button>
-                    <span class="topbar-title" id="topbarTitle">Event Registration</span>
+                    <span class="topbar-title" id="topbarTitle">Home</span>
                 </div>
                 <div class="topbar-right">
                     <button class="topbar-icon-btn" id="settingsBtn" title="Settings" aria-label="Open settings">
@@ -1426,7 +1433,51 @@
             </div>
 
             <div class="content-area" id="contentArea">
-                <div id="tab-registration" class="tab-content active">
+                
+                <!-- TAB: HOME (DASHBOARD) -->
+                <div id="tab-home" class="tab-content active">
+                    <div class="container" style="flex-direction: column;">
+                        <div class="card" style="width: 100%; box-sizing: border-box;">
+                            <h2>Dashboard &amp; Registrations</h2>
+                            
+                            <div class="dashboard-stats">
+                                <div class="stat-box stat-health-ok" id="healthBox">
+                                    <h3 id="healthTitle" class="stat-health-title">All Good!</h3>
+                                    <p id="healthSubtitle">Sales up to date</p>
+                                </div>
+
+                                <div class="stat-box stat-next-event" id="nextEventBox">
+                                    <h3 id="nextEventTitle">Loading...</h3>
+                                    <p id="nextEventSubtitle">Checking schedule...</p>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                                <button id="cleanupBtn" class="btn-cleanup" style="margin: 0;">🧹 Remove Ghost Events (No Registration)</button>
+                                <button class="quick-nav-btn" onclick="document.querySelector('[data-tab=\'registration\']').click()">+ Add New Event →</button>
+                            </div>
+
+                            <input type="text" id="searchBar" placeholder="Search/Filter registrations...">
+                            
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th class="clickable" data-sort="0">Department</th>
+                                        <th class="clickable" data-sort="1">Event</th>
+                                        <th class="clickable" data-sort="2">Duration</th>
+                                        <th>Status</th>
+                                        <th>Remarks</th>
+                                        <th style="text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: EVENT REGISTRATION (CALENDAR + FORM) -->
+                <div id="tab-registration" class="tab-content">
                     <div class="container">
                         <div class="card calendar-card">
                             <h2>Promotion Calendar</h2>
@@ -1459,41 +1510,10 @@
                                 <button type="button" id="cancelEditBtn">Cancel Edit</button>
                             </form>
                         </div>
-
-                        <div class="card table-card">
-                            <h2>Dashboard &amp; Registrations</h2>
-                            
-                            <div class="dashboard-stats">
-                                <div class="stat-box stat-health-ok" id="healthBox">
-                                    <h3 id="healthTitle" class="stat-health-title">All Good!</h3>
-                                    <p id="healthSubtitle">Sales up to date</p>
-                                </div>
-
-                                <div class="stat-box stat-next-event" id="nextEventBox">
-                                    <h3 id="nextEventTitle">Loading...</h3>
-                                    <p id="nextEventSubtitle">Checking schedule...</p>
-                                </div>
-                            </div>
-                            
-                            <button id="cleanupBtn" class="btn-cleanup">🧹 Remove Ghost Events (No Registration)</button>
-                            <input type="text" id="searchBar" placeholder="Search/Filter...">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th class="clickable" data-sort="0">Department</th>
-                                        <th class="clickable" data-sort="1">Event</th>
-                                        <th class="clickable" data-sort="2">Duration</th>
-                                        <th>Status</th>
-                                        <th>Remarks</th>
-                                        <th style="text-align: center;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableBody"></tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
 
+                <!-- TAB: SALES TRACKER -->
                 <div id="tab-sales" class="tab-content">
                     <div class="container" style="flex-direction: column;">
                         <div class="card" style="width: 100%; box-sizing: border-box;">
@@ -1533,6 +1553,7 @@
                     </div>
                 </div>
 
+                <!-- TAB: REPORTS -->
                 <div id="tab-reports" class="tab-content">
                     <div class="container" style="flex-direction: column;">
                         <div class="reports-controls">
@@ -1576,6 +1597,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -2076,6 +2098,7 @@
             localStorage.setItem(LS_TAB_KEY, tabId);
 
             const titleMap = {
+                home: 'Home',
                 registration: 'Event Registration',
                 sales: 'Sales Tracker',
                 reports: 'Reports & Analytics'
@@ -2412,24 +2435,30 @@
                 if (!reg) return;
                 const ev = savedEvents.find(e => e.title === reg.event_title);
 
-                editRegId.value = reg.id;
-                departmentInput.value = reg.department;
-                newEventNameInput.value = reg.event_title;
-                notesInput.value = reg.notes || "";
-                
-                if (ev) {
-                    startDateInput.value = ev.start_date;
-                    const endInc = parseLocalDate(ev.end_date);
-                    endInc.setDate(endInc.getDate() - 1);
-                    endDateInput.value = formatLocalDate(endInc);
-                } else { startDateInput.value = ""; endDateInput.value = ""; }
+                // Switch to registration tab first
+                const regTabBtn = document.querySelector('.sidebar-nav-item[data-tab="registration"]');
+                if (regTabBtn) switchTab('registration', regTabBtn);
 
-                calculateDuration();
-                formTitle.textContent = "Edit Registration";
-                submitBtn.textContent = "Update Registration";
-                submitBtn.classList.add('editing');
-                cancelEditBtn.style.display = 'block';
-                document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => {
+                    editRegId.value = reg.id;
+                    departmentInput.value = reg.department;
+                    newEventNameInput.value = reg.event_title;
+                    notesInput.value = reg.notes || "";
+                    
+                    if (ev) {
+                        startDateInput.value = ev.start_date;
+                        const endInc = parseLocalDate(ev.end_date);
+                        endInc.setDate(endInc.getDate() - 1);
+                        endDateInput.value = formatLocalDate(endInc);
+                    } else { startDateInput.value = ""; endDateInput.value = ""; }
+
+                    calculateDuration();
+                    formTitle.textContent = "Edit Registration";
+                    submitBtn.textContent = "Update Registration";
+                    submitBtn.classList.add('editing');
+                    cancelEditBtn.style.display = 'block';
+                    document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
+                }, 100);
             }
 
             if (deleteBtn) {
@@ -2544,14 +2573,14 @@
                         const start = ev.start ? ev.start.toLocaleDateString() : '';
                         let end = start;
                         if (ev.end) { const d = new Date(ev.end); d.setDate(d.getDate() - 1); end = d.toLocaleDateString(); }
-                        alert(`Event: ${ev.title}\nDates: ${start} to ${end}\n\nTo delete this event, use the Dashboard table or Cleanup button.`);
+                        alert(`Event: ${ev.title}\nDates: ${start} to ${end}\n\nTo delete this event, use the Home table or Cleanup button.`);
                     }
                 });
                 calendar.render();
             }
 
             loadData().then(() => {
-                const savedTab = localStorage.getItem(LS_TAB_KEY) || 'registration';
+                const savedTab = localStorage.getItem(LS_TAB_KEY) || 'home';
                 const tabBtn = document.querySelector(`.sidebar-nav-item[data-tab="${savedTab}"]`);
                 if (tabBtn) tabBtn.click();
                 if (settings.defaultDepartment) {
