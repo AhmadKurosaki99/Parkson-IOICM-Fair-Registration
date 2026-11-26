@@ -17,6 +17,7 @@
             --bg-color: #f4f6f8;
             --text-dark: #333333;
             --text-light: #666666;
+            --danger-red: #c0392b;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -84,6 +85,9 @@
         .btn-delete:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
         .btn-delete svg { width: 18px; height: 18px; fill: currentColor; }
 
+        .btn-cleanup { background: var(--danger-red); color: white; padding: 8px 15px; font-size: 12px; width: auto; margin-top: 10px; margin-bottom: 10px; display: block; }
+        .btn-cleanup:hover { background: #a93226; box-shadow: 0 4px 10px rgba(192, 57, 43, 0.3); }
+
         .sales-controls { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #ddd; flex-wrap: wrap; }
         .sales-controls select { margin: 0; width: auto; min-width: 200px; }
         .grid-input { width: 100px; padding: 8px; margin: 0; text-align: right; border: 1px solid transparent; background: transparent; transition: all 0.2s; box-sizing: border-box; }
@@ -110,19 +114,15 @@
         .fc-day-today .fc-daygrid-day-number { color: var(--parkson-green); font-weight: bold; }
         .fc-event { border: none !important; border-radius: 3px !important; padding: 3px 8px !important; font-size: 12px !important; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: var(--parkson-green); transition: transform 0.2s ease; }
         .fc-event:hover { transform: scale(1.02) translateY(-1px); box-shadow: 0 4px 8px rgba(28, 74, 59, 0.3); }
-        .fc-daygrid-event-dot { border-color: white !important; margin-right: 6px; }
+        .fc-daygrid-event-dot { display: none !important; } /* Removes the dot before event text */
         .calendar-legend { display: flex; gap: 15px; margin-top: 15px; font-size: 12px; color: var(--text-light); justify-content: center; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
         .legend-item { display: flex; align-items: center; gap: 6px; }
         .legend-dot { width: 12px; height: 12px; border-radius: 2px; background-color: var(--parkson-green); }
 
-        /* Toast notifications */
         .toast { position: fixed; bottom: 20px; right: 20px; padding: 14px 22px; border-radius: 4px; color: white; background: var(--parkson-green); z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease-out; font-weight: 600; font-size: 14px; max-width: 320px; }
         .toast.error { background: #e74c3c; }
-
-        /* Empty state message */
         .empty-state { text-align: center; color: #999; padding: 40px 20px; font-style: italic; }
 
-        /* Mobile responsive */
         @media (max-width: 768px) {
             .container { padding: 12px; gap: 12px; }
             .calendar-card, .form-card, .table-card { min-width: 100%; max-width: 100%; }
@@ -185,6 +185,10 @@
                     <div class="stat-box"><h3 id="totalRegs">0</h3><p>Total Registrations</p></div>
                     <div class="stat-box"><h3 id="totalDays">0</h3><p>Total Days Tracked</p></div>
                 </div>
+                
+                <!-- NEW CLEANUP BUTTON -->
+                <button id="cleanupBtn" class="btn-cleanup">🧹 Remove Ghost Events (No Registration)</button>
+                
                 <input type="text" id="searchBar" placeholder="Search/Filter...">
                 <table>
                     <thead>
@@ -205,10 +209,8 @@
 
     <div id="tab-sales" class="tab-content">
         <div class="container" style="flex-direction: column;">
-
             <div class="card" style="width: 100%; box-sizing: border-box;">
                 <h2>Sales Tracker (Excel View)</h2>
-
                 <div class="sales-controls">
                     <div>
                         <label style="margin-top:0;">Select Event:</label>
@@ -224,7 +226,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div style="overflow-x: auto;">
                     <table class="sales-table" id="salesGrid">
                         <thead id="salesGridHead"></thead>
@@ -232,17 +233,12 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script>
-        // ============================================================
-        //  CONFIG
-        // ============================================================
         const SUPABASE_URL = 'https://qbrbtmuwkykdvgxawuiw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_O11wGR3gW1JrZE46hV7vMA_gyrZO9qE';
-
         const DEFAULT_DEPARTMENT = 'Dept 44';
         const DEFAULT_POS_REF = '327';
 
@@ -250,34 +246,22 @@
         try {
             const { createClient } = supabase;
             db = createClient(SUPABASE_URL, SUPABASE_KEY);
-        } catch (error) {
-            console.error("Supabase initialization failed:", error);
-        }
+        } catch (error) { console.error("Supabase initialization failed:", error); }
 
-        // ============================================================
-        //  STATE
-        // ============================================================
-        let savedEvents = [];        // rows from `events`
-        let registrations = [];       // rows from `registrations`
-        let filteredRegistrations = []; // current view after search
+        let savedEvents = [];
+        let registrations = [];
+        let filteredRegistrations = [];
         let calendar;
         let sortAscending = true;
-
         let currentSalesData = [];
         let currentSalesEvent = null;
 
-        // ============================================================
-        //  HELPERS
-        // ============================================================
-
-        // Escape user text before inserting into innerHTML (prevents XSS)
         function escapeHtml(str) {
             return String(str ?? '').replace(/[&<>"']/g, c => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
             }[c]));
         }
 
-        // Parse a "YYYY-MM-DD" string as LOCAL midnight (avoids timezone shifts)
         function parseLocalDate(str) {
             if (!str) return null;
             const [y, m, d] = str.split('-').map(Number);
@@ -285,7 +269,6 @@
             return new Date(y, m - 1, d);
         }
 
-        // Format a Date object as "YYYY-MM-DD" in LOCAL time
         function formatLocalDate(date) {
             const y = date.getFullYear();
             const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -293,7 +276,6 @@
             return `${y}-${m}-${d}`;
         }
 
-        // Small toast notification
         function toast(msg, type = 'success') {
             const el = document.createElement('div');
             el.className = `toast ${type}`;
@@ -302,34 +284,21 @@
             setTimeout(() => el.remove(), 3000);
         }
 
-        // Show a friendly error
         function showError(msg) { toast(msg, 'error'); console.error(msg); }
 
-        // ============================================================
-        //  TABS
-        // ============================================================
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
             document.getElementById('tab-' + tabId).classList.add('active');
             btn.classList.add('active');
-
-            if (tabId === 'sales') {
-                loadSalesEventsDropdown();
-            } else if (tabId === 'registration' && calendar) {
-                calendar.render();
-            }
+            if (tabId === 'sales') { loadSalesEventsDropdown(); } 
+            else if (tabId === 'registration' && calendar) { calendar.render(); }
         }
 
-        // Attach tab button listeners
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => switchTab(e.currentTarget.dataset.tab, e.currentTarget));
         });
 
-        // ============================================================
-        //  DOM REFERENCES
-        // ============================================================
         const form = document.getElementById('regForm');
         const submitBtn = document.getElementById('submitBtn');
         const tableBody = document.getElementById('tableBody');
@@ -342,7 +311,6 @@
         const notesInput = document.getElementById('notes');
         const salesEventSelect = document.getElementById('salesEventSelect');
 
-        // Populate department dropdown (31–55)
         for (let i = 31; i <= 55; i++) {
             const option = document.createElement('option');
             option.value = "Dept " + i;
@@ -350,31 +318,22 @@
             departmentInput.appendChild(option);
         }
 
-        // ============================================================
-        //  DATE / DURATION
-        // ============================================================
         function calculateDuration() {
             const start = parseLocalDate(startDateInput.value);
             const end = parseLocalDate(endDateInput.value);
             if (start && end) {
                 const days = Math.round((end - start) / (1000 * 3600 * 24)) + 1;
                 durationInput.value = days > 0 ? days + " Day(s)" : "Invalid Dates";
-            } else {
-                durationInput.value = "";
-            }
+            } else { durationInput.value = ""; }
         }
         startDateInput.addEventListener('change', calculateDuration);
         endDateInput.addEventListener('change', calculateDuration);
 
-        // ============================================================
-        //  DATA LOAD
-        // ============================================================
         async function loadData() {
             if (!db) return;
             try {
                 const { data: eventData, error: evErr } = await db.from('events').select('*');
                 if (evErr) { showError('Failed to load events: ' + evErr.message); return; }
-
                 savedEvents = eventData || [];
                 if (calendar) {
                     calendar.removeAllEvents();
@@ -385,7 +344,6 @@
 
                 const { data: regData, error: regErr } = await db.from('registrations').select('*').order('created_at', { ascending: false });
                 if (regErr) { showError('Failed to load registrations: ' + regErr.message); return; }
-
                 registrations = regData || [];
                 filteredRegistrations = registrations;
                 renderDashboard();
@@ -395,24 +353,17 @@
             }
         }
 
-        // ============================================================
-        //  FORM SUBMIT
-        // ============================================================
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             if (!db) return;
-
             if (!departmentInput.value) { showError('Please select a department.'); return; }
             if (!newEventNameInput.value.trim()) { showError('Please enter an event name.'); return; }
             if (!startDateInput.value || !endDateInput.value) { showError('Please select both dates.'); return; }
-
             const start = parseLocalDate(startDateInput.value);
             const end = parseLocalDate(endDateInput.value);
             if (end < start) { showError('End Date cannot be before Start Date!'); return; }
 
             const eventName = newEventNameInput.value.trim();
-
-            // FullCalendar treats end as EXCLUSIVE, so add 1 day
             const endExclusive = new Date(end);
             endExclusive.setDate(endExclusive.getDate() + 1);
             const endString = formatLocalDate(endExclusive);
@@ -422,27 +373,16 @@
 
             try {
                 let existingEvent = savedEvents.find(e => e.title.toLowerCase() === eventName.toLowerCase());
-
                 if (existingEvent) {
-                    const { error } = await db.from('events')
-                        .update({ start_date: startDateInput.value, end_date: endString })
-                        .eq('id', existingEvent.id);
+                    const { error } = await db.from('events').update({ start_date: startDateInput.value, end_date: endString }).eq('id', existingEvent.id);
                     if (error) throw error;
                 } else {
-                    const { error } = await db.from('events').insert([{
-                        title: eventName,
-                        start_date: startDateInput.value,
-                        end_date: endString
-                    }]);
+                    const { error } = await db.from('events').insert([{ title: eventName, start_date: startDateInput.value, end_date: endString }]);
                     if (error) throw error;
                 }
 
                 const { error: regErr } = await db.from('registrations').insert([{
-                    department: departmentInput.value,
-                    event_title: eventName,
-                    duration: durationInput.value,
-                    status: "Active",
-                    notes: notesInput.value
+                    department: departmentInput.value, event_title: eventName, duration: durationInput.value, status: "Active", notes: notesInput.value
                 }]);
                 if (regErr) throw regErr;
 
@@ -459,12 +399,8 @@
             }
         });
 
-        // ============================================================
-        //  DASHBOARD
-        // ============================================================
         function renderDashboard(dataToRender = filteredRegistrations) {
             document.getElementById('totalRegs').innerText = dataToRender.length;
-
             let totalDaysCount = 0;
             dataToRender.forEach(item => {
                 if (item.duration) {
@@ -479,7 +415,6 @@
                 return;
             }
 
-            // Build all rows first, then assign once (much faster)
             const rowsHtml = dataToRender.map(item => `
                 <tr>
                     <td><strong>${escapeHtml(item.department)}</strong></td>
@@ -488,43 +423,33 @@
                     <td><span class="status-active">${escapeHtml(item.status)}</span></td>
                     <td>${escapeHtml(item.notes) || '-'}</td>
                     <td style="text-align: center;">
-                        <button class="btn-delete"
-                                data-id="${item.id}"
-                                data-title="${escapeHtml(item.event_title)}"
-                                title="Delete Registration">
+                        <button class="btn-delete" data-id="${item.id}" data-title="${escapeHtml(item.event_title)}" title="Delete Registration">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                         </button>
                     </td>
                 </tr>
             `).join('');
-
             tableBody.innerHTML = rowsHtml;
         }
 
-        // Delete via event delegation
         tableBody.addEventListener('click', async (e) => {
             const btn = e.target.closest('.btn-delete');
             if (!btn) return;
-
             const id = btn.dataset.id;
             const eventTitle = btn.dataset.title;
-
             if (!confirm('Delete this registration?')) return;
 
             try {
                 const { error: delErr } = await db.from('registrations').delete().eq('id', id);
                 if (delErr) throw delErr;
 
-                // Only remove the calendar event if no other registrations reference it
-                const { data: remaining, error: remErr } = await db.from('registrations')
-                    .select('id').eq('event_title', eventTitle);
+                const { data: remaining, error: remErr } = await db.from('registrations').select('id').eq('event_title', eventTitle);
                 if (remErr) throw remErr;
 
                 if (!remaining || remaining.length === 0) {
                     const { error: evDelErr } = await db.from('events').delete().eq('title', eventTitle);
                     if (evDelErr) throw evDelErr;
                 }
-
                 toast('Registration deleted.');
                 await loadData();
                 loadSalesEventsDropdown();
@@ -534,14 +459,10 @@
             }
         });
 
-        // ============================================================
-        //  SEARCH + SORT
-        // ============================================================
         searchBar.addEventListener('input', function (e) {
             const term = e.target.value.toLowerCase();
             filteredRegistrations = registrations.filter(item =>
-                (item.department || '').toLowerCase().includes(term) ||
-                (item.event_title || '').toLowerCase().includes(term)
+                (item.department || '').toLowerCase().includes(term) || (item.event_title || '').toLowerCase().includes(term)
             );
             renderDashboard(filteredRegistrations);
         });
@@ -552,23 +473,12 @@
 
         function sortTable(columnIndex) {
             sortAscending = !sortAscending;
-
-            const target = (filteredRegistrations.length === registrations.length)
-                ? registrations
-                : filteredRegistrations;
-
+            const target = (filteredRegistrations.length === registrations.length) ? registrations : filteredRegistrations;
             target.sort((a, b) => {
                 let valA, valB;
-                if (columnIndex === 0) {
-                    valA = parseInt((a.department || '').replace('Dept ', '')) || 0;
-                    valB = parseInt((b.department || '').replace('Dept ', '')) || 0;
-                } else if (columnIndex === 1) {
-                    valA = (a.event_title || '').toLowerCase();
-                    valB = (b.event_title || '').toLowerCase();
-                } else if (columnIndex === 2) {
-                    valA = parseInt(a.duration) || 0;
-                    valB = parseInt(b.duration) || 0;
-                }
+                if (columnIndex === 0) { valA = parseInt((a.department || '').replace('Dept ', '')) || 0; valB = parseInt((b.department || '').replace('Dept ', '')) || 0; }
+                else if (columnIndex === 1) { valA = (a.event_title || '').toLowerCase(); valB = (b.event_title || '').toLowerCase(); }
+                else if (columnIndex === 2) { valA = parseInt(a.duration) || 0; valB = parseInt(b.duration) || 0; }
                 if (valA < valB) return sortAscending ? -1 : 1;
                 if (valA > valB) return sortAscending ? 1 : -1;
                 return 0;
@@ -576,30 +486,23 @@
             renderDashboard(target);
         }
 
-        // ============================================================
-        //  CALENDAR
-        // ============================================================
         document.addEventListener('DOMContentLoaded', function () {
             const calendarEl = document.getElementById('calendar');
             if (calendarEl) {
                 calendar = new FullCalendar.Calendar(calendarEl, {
                     initialView: 'dayGridMonth',
                     headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
-                    height: 'auto',
-                    selectable: false,
-                    editable: false,
-                    events: [],
+                    height: 'auto', selectable: false, editable: false, events: [],
                     eventClick: function (info) {
                         const ev = info.event;
                         const start = ev.start ? ev.start.toLocaleDateString() : '';
-                        // FullCalendar's end is exclusive; subtract a day for display
                         let end = start;
                         if (ev.end) {
                             const d = new Date(ev.end);
                             d.setDate(d.getDate() - 1);
                             end = d.toLocaleDateString();
                         }
-                        alert(`Event: ${ev.title}\nDates: ${start} to ${end}\n\nTo delete this event, use the Dashboard table.`);
+                        alert(`Event: ${ev.title}\nDates: ${start} to ${end}\n\nTo delete this event, use the Dashboard table or Cleanup button.`);
                     }
                 });
                 calendar.render();
@@ -607,9 +510,29 @@
             loadData();
         });
 
-        // ============================================================
-        //  SALES GRID
-        // ============================================================
+        // --- CLEANUP FUNCTION ---
+        document.getElementById('cleanupBtn').addEventListener('click', async () => {
+            if (!confirm('This will remove any events on the calendar that do not have a registration in the dashboard. Continue?')) return;
+
+            try {
+                const { data: regs, error: regErr } = await db.from('registrations').select('event_title');
+                if (regErr) throw regErr;
+                const registeredTitles = new Set((regs || []).map(r => r.event_title.toLowerCase()));
+                const orphans = savedEvents.filter(e => !registeredTitles.has(e.title.toLowerCase()));
+
+                if (orphans.length === 0) { toast('No ghost events found. All clean!'); return; }
+
+                for (const ev of orphans) { await db.from('events').delete().eq('id', ev.id); }
+                toast(`Removed ${orphans.length} ghost event(s).`);
+                await loadData();
+                loadSalesEventsDropdown();
+            } catch (err) {
+                showError('Cleanup failed: ' + (err.message || 'unknown'));
+                console.error(err);
+            }
+        });
+
+        // --- SALES GRID ---
         function loadSalesEventsDropdown() {
             const currentVal = salesEventSelect.value;
             salesEventSelect.innerHTML = '<option value="">Select an Event...</option>';
@@ -630,23 +553,17 @@
             const bodyEl = document.getElementById('salesGridBody');
 
             if (!eventTitle) {
-                headEl.innerHTML = '';
-                bodyEl.innerHTML = '';
-                currentSalesData = [];
-                currentSalesEvent = null;
-                return;
+                headEl.innerHTML = ''; bodyEl.innerHTML = ''; currentSalesData = []; currentSalesEvent = null; return;
             }
 
             const event = savedEvents.find(e => e.title === eventTitle);
             if (!event) return;
             currentSalesEvent = event;
 
-            const { data: salesData, error } = await db.from('fair_daily_sales')
-                .select('*').eq('event_title', eventTitle);
+            const { data: salesData, error } = await db.from('fair_daily_sales').select('*').eq('event_title', eventTitle);
             if (error) { showError('Failed to load sales: ' + error.message); return; }
             currentSalesData = salesData || [];
 
-            // Build date range (end_date is exclusive in `events`)
             const start = parseLocalDate(event.start_date);
             const endInc = parseLocalDate(event.end_date);
             endInc.setDate(endInc.getDate() - 1);
@@ -661,13 +578,11 @@
             let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
             if (brands.length === 0) brands = ["Brand 1"];
 
-            // ---- HEADER ----
             let headHtml = `<tr><th>Date</th><th>Day</th>`;
             brands.forEach(b => { headHtml += `<th>${escapeHtml(b)}</th>`; });
             headHtml += `<th>Daily Total</th><th>POS Ref</th></tr>`;
             headEl.innerHTML = headHtml;
 
-            // ---- BODY ----
             let bodyHtml = '';
             const brandTotals = {};
             brands.forEach(b => brandTotals[b] = 0);
@@ -682,66 +597,42 @@
                 let posRef = '-';
 
                 bodyHtml += `<tr><td>${displayDate}</td><td>${dayName}</td>`;
-
                 brands.forEach(b => {
                     const entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
                     const val = entry ? entry.amount : 0;
                     if (entry && entry.pos_ref) posRef = entry.pos_ref;
-
-                    rowTotal += val;
-                    brandTotals[b] += val;
-
-                    bodyHtml += `<td><input type="number" class="grid-input"
-                        data-date="${dateStr}"
-                        data-brand="${escapeHtml(b)}"
-                        data-event="${escapeHtml(eventTitle)}"
-                        value="${val > 0 ? val : ''}" placeholder="0.00"></td>`;
+                    rowTotal += val; brandTotals[b] += val;
+                    bodyHtml += `<td><input type="number" class="grid-input" data-date="${dateStr}" data-brand="${escapeHtml(b)}" data-event="${escapeHtml(eventTitle)}" value="${val > 0 ? val : ''}" placeholder="0.00"></td>`;
                 });
 
                 grandTotal += rowTotal;
-                bodyHtml += `<td><input type="number" class="grid-input"
-                    value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly></td>`;
-                bodyHtml += `<td><input type="text" class="grid-input pos-ref-input"
-                    data-date="${dateStr}"
-                    data-event="${escapeHtml(eventTitle)}"
-                    value="${escapeHtml(posRef)}" style="width:70px;"></td>`;
+                bodyHtml += `<td><input type="number" class="grid-input" value="${rowTotal > 0 ? rowTotal.toFixed(2) : ''}" readonly></td>`;
+                bodyHtml += `<td><input type="text" class="grid-input pos-ref-input" data-date="${dateStr}" data-event="${escapeHtml(eventTitle)}" value="${escapeHtml(posRef)}" style="width:70px;"></td>`;
                 bodyHtml += `</tr>`;
             });
 
-            // ---- TOTALS ROW ----
             bodyHtml += `<tr class="total-row"><td colspan="2">TOTAL</td>`;
-            brands.forEach(b => {
-                bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`;
-            });
+            brands.forEach(b => { bodyHtml += `<td>RM ${brandTotals[b].toFixed(2)}</td>`; });
             bodyHtml += `<td>RM ${grandTotal.toFixed(2)}</td><td></td></tr>`;
-
             bodyEl.innerHTML = bodyHtml;
         }
 
-        // Debounced save for sales amount inputs
         const saveTimers = new Map();
         function debouncedSave(key, fn, delay = 350) {
             clearTimeout(saveTimers.get(key));
             saveTimers.set(key, setTimeout(fn, delay));
         }
 
-        // Delegate input changes inside the sales grid
         document.getElementById('salesGridBody').addEventListener('change', (e) => {
             const target = e.target;
-
-            // Brand amount cell
             if (target.matches('.grid-input[data-brand]')) {
                 const { date, brand, event } = target.dataset;
-                const value = target.value;
-                debouncedSave(`cell-${date}-${brand}`, () => updateCell(date, brand, value, event));
+                debouncedSave(`cell-${date}-${brand}`, () => updateCell(date, brand, target.value, event));
                 return;
             }
-
-            // POS ref cell
             if (target.matches('.pos-ref-input')) {
                 const { date, event } = target.dataset;
-                const value = target.value;
-                debouncedSave(`pos-${date}`, () => updatePosRef(date, value, event));
+                debouncedSave(`pos-${date}`, () => updatePosRef(date, target.value, event));
             }
         });
 
@@ -749,43 +640,27 @@
             if (!db) return;
             const numValue = parseFloat(value) || 0;
             const existing = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === brandName);
-
             try {
                 if (existing) {
-                    const { error } = await db.from('fair_daily_sales')
-                        .update({ amount: numValue }).eq('id', existing.id);
+                    const { error } = await db.from('fair_daily_sales').update({ amount: numValue }).eq('id', existing.id);
                     if (error) throw error;
                 } else if (numValue > 0) {
                     const { error } = await db.from('fair_daily_sales').insert([{
-                        event_title: eventTitle,
-                        department: DEFAULT_DEPARTMENT,
-                        sale_date: dateStr,
-                        brand_name: brandName,
-                        amount: numValue,
-                        pos_ref: DEFAULT_POS_REF
+                        event_title: eventTitle, department: DEFAULT_DEPARTMENT, sale_date: dateStr, brand_name: brandName, amount: numValue, pos_ref: DEFAULT_POS_REF
                     }]);
                     if (error) throw error;
                 }
                 await loadSalesGrid();
-            } catch (err) {
-                showError('Failed to save cell: ' + (err.message || 'unknown error'));
-                console.error(err);
-            }
+            } catch (err) { showError('Failed to save cell: ' + (err.message || 'unknown error')); console.error(err); }
         }
 
         async function updatePosRef(dateStr, newRef, eventTitle) {
             if (!db) return;
             try {
-                const { error } = await db.from('fair_daily_sales')
-                    .update({ pos_ref: newRef })
-                    .eq('event_title', eventTitle)
-                    .eq('sale_date', dateStr);
+                const { error } = await db.from('fair_daily_sales').update({ pos_ref: newRef }).eq('event_title', eventTitle).eq('sale_date', dateStr);
                 if (error) throw error;
                 await loadSalesGrid();
-            } catch (err) {
-                showError('Failed to update POS ref: ' + (err.message || 'unknown error'));
-                console.error(err);
-            }
+            } catch (err) { showError('Failed to update POS ref: ' + (err.message || 'unknown error')); console.error(err); }
         }
 
         document.getElementById('addBrandBtn').addEventListener('click', addBrandColumn);
@@ -799,27 +674,17 @@
             const newBrand = input.value.trim();
             const eventTitle = salesEventSelect.value;
             if (!newBrand || !eventTitle) { showError('Please select an event and enter a brand name.'); return; }
-
             if (!currentSalesEvent) return;
 
             try {
                 const { error } = await db.from('fair_daily_sales').insert([{
-                    event_title: eventTitle,
-                    department: DEFAULT_DEPARTMENT,
-                    sale_date: currentSalesEvent.start_date,
-                    brand_name: newBrand,
-                    amount: 0,
-                    pos_ref: DEFAULT_POS_REF
+                    event_title: eventTitle, department: DEFAULT_DEPARTMENT, sale_date: currentSalesEvent.start_date, brand_name: newBrand, amount: 0, pos_ref: DEFAULT_POS_REF
                 }]);
                 if (error) throw error;
-
                 input.value = "";
                 toast('Brand column added.');
                 await loadSalesGrid();
-            } catch (err) {
-                showError('Failed to add brand: ' + (err.message || 'unknown error'));
-                console.error(err);
-            }
+            } catch (err) { showError('Failed to add brand: ' + (err.message || 'unknown error')); console.error(err); }
         }
     </script>
 </body>
