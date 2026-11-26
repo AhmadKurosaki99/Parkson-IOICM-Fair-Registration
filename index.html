@@ -30,6 +30,17 @@
             --sticky-header-bg: #f8f9fa;
             --weekend-bg: #f4f8fb;
             --weekend-col-bg: #eef4f9;
+
+            --sidebar-width: 240px;
+            --sidebar-width-collapsed: 64px;
+            --sidebar-bg: #ffffff;
+            --sidebar-border: #e5e5e5;
+            --sidebar-text: #4a5568;
+            --sidebar-text-muted: #9aa0a6;
+            --sidebar-hover-bg: #f4f6f8;
+            --sidebar-active-bg: #eef5f2;
+            --sidebar-active-text: #1c4a3b;
+            --sidebar-section-label: #9aa0a6;
         }
 
         [data-theme="dark"] {
@@ -52,6 +63,15 @@
             --sticky-header-bg: #2a2f37;
             --weekend-bg: #2a3140;
             --weekend-col-bg: #2f3646;
+
+            --sidebar-bg: #1f2329;
+            --sidebar-border: #2d323a;
+            --sidebar-text: #b8bec7;
+            --sidebar-text-muted: #6b7280;
+            --sidebar-hover-bg: #2a2f37;
+            --sidebar-active-bg: #1a3a2f;
+            --sidebar-active-text: #4a9b7f;
+            --sidebar-section-label: #6b7280;
         }
 
         [data-density="compact"] {
@@ -63,57 +83,684 @@
         @keyframes slideInRow { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         @keyframes spin { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
+        @keyframes slideInDrawer { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg-color); color: var(--text-dark); animation: fadeIn 0.6s ease-out; transition: background-color 0.3s, color 0.3s; }
+        * { box-sizing: border-box; }
 
-        header { background: var(--card-bg); padding: 15px 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-bottom: 3px solid var(--parkson-green); position: relative; z-index: 10; transition: background-color 0.3s; }
-        header img { max-height: 60px; width: auto; margin-bottom: 5px; }
-        header h1 { margin: 5px 0 0 0; font-size: 18px; color: var(--parkson-green); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-        header p { margin: 2px 0 0 0; font-size: 13px; color: var(--text-light); }
+        html, body { margin: 0; padding: 0; }
 
-        /* Settings gear button in header */
-        .header-settings-btn {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            animation: fadeIn 0.6s ease-out;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* ==================== APP LAYOUT ==================== */
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: width 0.25s ease, background-color 0.3s, border-color 0.3s;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-width-collapsed);
+        }
+
+        .sidebar-header {
+            padding: 20px 18px;
+            border-bottom: 1px solid var(--sidebar-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 80px;
+            transition: padding 0.25s ease;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding: 20px 8px;
+            justify-content: center;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: var(--parkson-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            box-shadow: 0 2px 8px rgba(28, 74, 59, 0.25);
+        }
+
+        .sidebar-brand {
+            flex: 1;
+            overflow: hidden;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .sidebar-brand {
+            opacity: 0;
+            width: 0;
+            pointer-events: none;
+        }
+
+        .sidebar-brand-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--parkson-green);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .sidebar-brand-subtitle {
+            font-size: 11px;
+            color: var(--sidebar-text-muted);
+            margin-top: 2px;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 12px;
+            scrollbar-width: thin;
+        }
+
+        .sidebar.collapsed .sidebar-nav {
+            padding: 16px 8px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--sidebar-section-label);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 12px 6px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .sidebar-section-label {
+            opacity: 0;
+            height: 12px;
+            padding: 0;
+            margin-bottom: 4px;
+        }
+
+        .sidebar.collapsed .sidebar-section-label::after {
+            content: '';
+            display: block;
+            height: 1px;
+            width: 24px;
+            background: var(--sidebar-border);
+            margin: 6px auto;
+        }
+
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            margin-bottom: 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            color: var(--sidebar-text);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            width: 100%;
+            position: relative;
+            transition: background-color 0.15s, color 0.15s;
+            border-left: 3px solid transparent;
+            white-space: nowrap;
+            overflow: hidden;
+            font-family: inherit;
+        }
+
+        .sidebar-nav-item:hover {
+            background: var(--sidebar-hover-bg);
+            color: var(--sidebar-text);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .sidebar-nav-item.active {
+            background: var(--sidebar-active-bg);
+            color: var(--sidebar-active-text);
+            border-left-color: var(--parkson-green);
+        }
+
+        .sidebar-nav-item.active .sidebar-nav-icon {
+            color: var(--parkson-green);
+        }
+
+        .sidebar-nav-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: inherit;
+            transition: color 0.15s;
+        }
+
+        .sidebar-nav-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .sidebar-nav-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .sidebar-nav-label {
+            opacity: 0;
+            width: 0;
+            flex: 0;
+            pointer-events: none;
+        }
+
+        .sidebar.collapsed .sidebar-nav-item {
+            justify-content: center;
+            padding: 10px;
+            border-left-width: 0;
+            border-left: none;
+        }
+
+        .sidebar.collapsed .sidebar-nav-item.active {
+            border-left: none;
+        }
+
+        .sidebar.collapsed .sidebar-nav-item.active::before {
+            content: '';
             position: absolute;
+            left: 0;
             top: 50%;
-            right: 20px;
             transform: translateY(-50%);
+            height: 60%;
+            width: 3px;
+            background: var(--parkson-green);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .sidebar.collapsed .sidebar-nav-icon {
+            width: 22px;
+            height: 22px;
+        }
+
+        .sidebar.collapsed .sidebar-nav-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .sidebar-nav-item.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .sidebar-nav-item.disabled:hover {
+            background: transparent;
+        }
+
+        .sidebar-badge {
+            background: var(--parkson-green);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .sidebar-badge {
+            display: none;
+        }
+
+        /* Sidebar bottom: user + version + toggle */
+        .sidebar-bottom {
+            border-top: 1px solid var(--sidebar-border);
+            padding: 12px;
+            transition: padding 0.25s ease;
+        }
+
+        .sidebar.collapsed .sidebar-bottom {
+            padding: 12px 8px;
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: default;
+            transition: background-color 0.15s;
+        }
+
+        .sidebar-user:hover {
+            background: var(--sidebar-hover-bg);
+        }
+
+        .sidebar-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--parkson-green-light);
+            color: var(--parkson-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user-info {
+            flex: 1;
+            overflow: hidden;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .sidebar-user-info {
+            opacity: 0;
+            width: 0;
+            pointer-events: none;
+        }
+
+        .sidebar-user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--sidebar-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-role {
+            font-size: 11px;
+            color: var(--sidebar-text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar.collapsed .sidebar-user {
+            justify-content: center;
+            padding: 8px 0;
+        }
+
+        .sidebar-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px 0 10px;
+            gap: 8px;
+        }
+
+        .sidebar.collapsed .sidebar-footer {
+            padding: 8px 0 0 0;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-version {
+            font-size: 10px;
+            color: var(--sidebar-text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar.collapsed .sidebar-version {
+            opacity: 0;
+            width: 0;
+            display: none;
+        }
+
+        .sidebar-toggle {
+            background: transparent;
+            border: 1px solid var(--sidebar-border);
+            color: var(--sidebar-text-muted);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--sidebar-hover-bg);
+            color: var(--parkson-green);
+            border-color: var(--parkson-green);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .sidebar-toggle svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar.collapsed .sidebar-toggle svg {
+            transform: rotate(180deg);
+        }
+
+        /* Tooltip for collapsed mode */
+        .sidebar.collapsed .sidebar-nav-item {
+            position: relative;
+        }
+
+        .sidebar.collapsed .sidebar-nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--text-dark);
+            color: var(--bg-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+            z-index: 200;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .sidebar.collapsed .sidebar-nav-item:hover::after {
+            opacity: 1;
+        }
+
+        /* ==================== MAIN AREA ==================== */
+        .main-area {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-area.sidebar-collapsed {
+            margin-left: var(--sidebar-width-collapsed);
+            width: calc(100% - var(--sidebar-width-collapsed));
+        }
+
+        .topbar {
+            background: var(--card-bg);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: background-color 0.3s, border-color 0.3s;
+            gap: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mobile-menu-btn {
+            display: none;
             background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-light);
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .mobile-menu-btn:hover {
+            color: var(--parkson-green);
+            border-color: var(--parkson-green);
+        }
+
+        .mobile-menu-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--parkson-green);
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .topbar-icon-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.25s ease;
             padding: 0;
             margin: 0;
+            transition: all 0.2s;
+            position: relative;
         }
-        .header-settings-btn:hover {
+
+        .topbar-icon-btn:hover {
             background: var(--parkson-green-light);
             color: var(--parkson-green);
             border-color: var(--parkson-green);
-            transform: translateY(-50%) rotate(45deg);
-            box-shadow: 0 4px 12px rgba(28, 74, 59, 0.15);
+            transform: none;
+            box-shadow: none;
         }
-        .header-settings-btn svg {
-            width: 20px;
-            height: 20px;
+
+        .topbar-icon-btn svg {
+            width: 18px;
+            height: 18px;
             fill: currentColor;
-            transition: transform 0.3s;
         }
 
-        .tabs { display: flex; justify-content: center; background: var(--card-bg); border-bottom: 1px solid var(--border-color); transition: background-color 0.3s; }
-        .tab-btn { padding: 15px 30px; background: transparent; border: none; font-size: 15px; font-weight: 700; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; margin: 0; width: auto; text-transform: uppercase; border-radius: 0;}
-        .tab-btn:hover { color: var(--parkson-green); background: var(--parkson-green-light); transform: none; box-shadow: none; }
-        .tab-btn.active { color: var(--parkson-green); border-bottom: 3px solid var(--parkson-green); }
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-x: auto;
+        }
 
-        .tab-content { display: none; animation: popIn 0.4s ease-out; }
-        .tab-content.active { display: block; }
+        /* ==================== DRAWER (mobile) ==================== */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 150;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
 
-        .container { display: flex; flex-wrap: wrap; padding: 25px; gap: 25px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
+        .drawer-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width) !important;
+                animation: none;
+                z-index: 200;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+            }
+
+            .sidebar.drawer-open {
+                transform: translateX(0);
+                animation: slideInDrawer 0.25s ease-out;
+            }
+
+            .sidebar.collapsed {
+                width: var(--sidebar-width) !important;
+            }
+
+            .sidebar.collapsed .sidebar-brand,
+            .sidebar.collapsed .sidebar-section-label,
+            .sidebar.collapsed .sidebar-nav-label,
+            .sidebar.collapsed .sidebar-user-info,
+            .sidebar.collapsed .sidebar-version {
+                opacity: 1;
+                width: auto;
+                pointer-events: auto;
+            }
+
+            .sidebar.collapsed .sidebar-header {
+                padding: 20px 18px;
+                justify-content: flex-start;
+            }
+
+            .sidebar.collapsed .sidebar-nav {
+                padding: 16px 12px;
+            }
+
+            .sidebar.collapsed .sidebar-nav-item {
+                justify-content: flex-start;
+                padding: 10px 12px;
+            }
+
+            .sidebar.collapsed .sidebar-nav-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .sidebar.collapsed .sidebar-nav-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .sidebar.collapsed .sidebar-user {
+                justify-content: flex-start;
+                padding: 8px 10px;
+            }
+
+            .sidebar.collapsed .sidebar-footer {
+                padding: 8px 10px 0 10px;
+                flex-direction: row;
+                gap: 8px;
+            }
+
+            .sidebar.collapsed .sidebar-version {
+                opacity: 1;
+                width: auto;
+                display: block;
+            }
+
+            .main-area,
+            .main-area.sidebar-collapsed {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .topbar {
+                padding: 12px 16px;
+            }
+
+            .topbar-title {
+                font-size: 15px;
+            }
+
+            .content-area {
+                padding: 12px;
+            }
+
+            .sidebar-toggle {
+                display: none;
+            }
+        }
+
+        /* ==================== EXISTING CONTENT STYLES ==================== */
+        .container { display: flex; flex-wrap: wrap; padding: 0; gap: 25px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
 
         .card { background: var(--card-bg); padding: 25px; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); border-top: 3px solid var(--parkson-green); transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s; }
         .card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
@@ -194,7 +841,6 @@
         .btn-cleanup { background: #c0392b; color: white; padding: 8px 15px; font-size: 12px; width: auto; margin-top: 10px; margin-bottom: 10px; display: block; }
         .btn-cleanup:hover { background: #a93226; box-shadow: 0 4px 10px rgba(192, 57, 43, 0.3); }
 
-        /* --- SALES TRACKER UI --- */
         .sales-header-bar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; background: var(--card-bg); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
         
         .sales-event-selector { flex: 1; min-width: 250px; }
@@ -262,7 +908,6 @@
         .btn-del-brand:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
         .brand-rename-input { width: 80px; padding: 2px 4px; font-size: 12px; font-weight: bold; text-align: center; border: 1px solid var(--parkson-green); border-radius: 4px; margin: 0; }
 
-        /* --- CELL STATUS INDICATORS --- */
         .grid-input-wrapper { position: relative; display: inline-block; }
         .grid-input-wrapper .grid-input { padding-right: 20px; }
         .cell-status { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 11px; pointer-events: none; transition: opacity 0.3s ease; line-height: 1; }
@@ -272,7 +917,6 @@
         .cell-status.failed  { color: #e74c3c; }
         .cell-status.hidden  { opacity: 0; }
 
-        /* --- SAVE STATUS BAR --- */
         .save-status-bar { display: none; align-items: center; gap: 12px; padding: 8px 14px; background: var(--table-header-bg); border-radius: 4px; font-size: 12px; font-weight: 600; margin-bottom: 10px; border-left: 3px solid transparent; flex-wrap: wrap; }
         .save-status-bar.visible { display: flex; }
         .save-status-bar.has-failed { border-left-color: #e74c3c; background: #fee; }
@@ -288,7 +932,6 @@
         .btn-retry-all { background: #e74c3c; color: white; border: none; padding: 5px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: 700; width: auto; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-retry-all:hover { background: #c0392b; transform: none; box-shadow: none; }
 
-        /* --- REPORTS TAB SPECIFIC STYLES --- */
         .reports-controls { background: var(--card-bg); padding: 20px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid var(--border-color); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .reports-controls select { margin: 0; width: auto; min-width: 250px; font-weight: 700; border-color: var(--parkson-green); }
         
@@ -303,7 +946,6 @@
         .chart-card h3 { margin: 0 0 15px 0; font-size: 15px; color: var(--text-dark); font-weight: 700; text-transform: uppercase; }
         .chart-wrapper { position: relative; flex: 1; min-height: 0; }
 
-        /* Nav Quick Links */
         .quick-nav-btn { background: transparent; color: var(--parkson-green); border: 1px solid var(--parkson-green); padding: 6px 12px; font-size: 12px; border-radius: 4px; cursor: pointer; width: auto; margin: 0 5px 0 0; transition: all 0.2s; text-transform: none; letter-spacing: 0; }
         .quick-nav-btn:hover { background: var(--parkson-green-light); transform: none; box-shadow: none; }
 
@@ -332,7 +974,6 @@
         .toast.error { background: #e74c3c; }
         .empty-state { text-align: center; color: #999; padding: 40px 20px; font-style: italic; }
 
-        /* --- SKELETON LOADERS --- */
         @keyframes shimmer {
             0%   { background-position: -400px 0; }
             100% { background-position: 400px 0; }
@@ -369,7 +1010,6 @@
 
         .report-card .skeleton-stat { display: block; }
 
-        /* --- SETTINGS MODAL --- */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -600,7 +1240,6 @@
         }
         .settings-about-text strong { color: var(--text-dark); }
 
-        /* --- MOBILE CARD VIEW STYLES --- */
         .mobile-card-view { display: none; }
 
         @media (max-width: 1024px) {
@@ -618,10 +1257,6 @@
             .container { padding: 12px; gap: 12px; }
             .calendar-card, .form-card, .table-card { min-width: 100%; max-width: 100%; }
             .dashboard-stats { flex-direction: column; gap: 10px; }
-            .tab-btn { padding: 12px 15px; font-size: 13px; }
-            header h1 { font-size: 16px; }
-            header p { font-size: 11px; }
-            .header-settings-btn { right: 12px; width: 36px; height: 36px; }
             .card { padding: 15px; }
             .stat-next-event h3, .stat-health-title { font-size: 18px !important; }
 
@@ -655,11 +1290,12 @@
             .settings-radio-group label { flex: 1; text-align: center; }
         }
 
-        /* --- PRINT STYLES --- */
         @media print {
             body { background: white !important; font-size: 12px !important; margin: 0 !important; padding: 0 !important; }
-            header, .tabs, .quick-nav-btn, .sales-header-bar .sales-add-brand, .sales-actions, .mobile-card-view, .save-status-bar, .cell-status, .modal-overlay { display: none !important; }
+            .sidebar, .topbar, .quick-nav-btn, .sales-header-bar .sales-add-brand, .sales-actions, .mobile-card-view, .save-status-bar, .cell-status, .modal-overlay, .mobile-menu-btn, .drawer-overlay { display: none !important; }
             
+            .main-area, .main-area.sidebar-collapsed { margin-left: 0 !important; width: 100% !important; }
+            .content-area { padding: 0 !important; }
             .container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; display: block !important; }
             .card { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; border-top: none !important; background: white !important; }
             
@@ -696,195 +1332,256 @@
         }
     </style>
 </head>
-<body>
+<body data-active-tab="registration">
 
-    <header>
-        <img src="Parkson-logo-300x225.png" alt="Parkson Logo">
-        <h1>IOICM 127</h1>
-        <p>Promotion &amp; Fair Registration System</p>
-        <button class="header-settings-btn" id="settingsBtn" title="Settings" aria-label="Open settings">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-            </svg>
-        </button>
-    </header>
-
-    <div class="tabs" id="mainTabs">
-        <button class="tab-btn" data-tab="registration">Event Registration</button>
-        <button class="tab-btn" data-tab="sales">Sales Tracker</button>
-        <button class="tab-btn" data-tab="reports">Reports &amp; Analytics</button>
-    </div>
-
-    <!-- TAB 1: REGISTRATION -->
-    <div id="tab-registration" class="tab-content">
-        <div class="container">
-            <div class="card calendar-card">
-                <h2>Promotion Calendar</h2>
-                <div id="calendar"></div>
-                <div class="calendar-legend">
-                    <div class="legend-item"><div class="legend-dot"></div> Promotions</div>
+    <div class="app-shell">
+        <!-- ==================== SIDEBAR ==================== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">P</div>
+                <div class="sidebar-brand">
+                    <div class="sidebar-brand-title">IOICM 127</div>
+                    <div class="sidebar-brand-subtitle">Promotion System</div>
                 </div>
             </div>
 
-            <div class="card form-card">
-                <h2 id="formTitle">Fair Registration</h2>
-                <form id="regForm">
-                    <input type="hidden" id="editRegId" value="">
-                    <label>Department:</label>
-                    <select id="department" required>
-                        <option value="" disabled selected>Select Department...</option>
-                    </select>
-                    <label>Start &amp; End Date:</label>
-                    <div class="date-row">
-                        <div class="date-col"><input type="date" id="startDate" required></div>
-                        <div class="date-col"><input type="date" id="endDate" required></div>
-                    </div>
-                    <label>Duration (Days):</label>
-                    <input type="text" id="duration" readonly placeholder="Auto-calculated...">
-                    <label>New Promotion/Event Name:</label>
-                    <input type="text" id="newEventName" placeholder="e.g. Mega Sale..." required>
-                    <label>Remarks / Notes:</label>
-                    <textarea id="notes" rows="2" placeholder="Optional details..."></textarea>
-                    <button type="submit" id="submitBtn">Add Event to Calendar</button>
-                    <button type="button" id="cancelEditBtn">Cancel Edit</button>
-                </form>
-            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">Main</div>
 
-            <div class="card table-card">
-                <h2>Dashboard &amp; Registrations</h2>
-                
-                <div class="dashboard-stats">
-                    <div class="stat-box stat-health-ok" id="healthBox">
-                        <h3 id="healthTitle" class="stat-health-title">All Good!</h3>
-                        <p id="healthSubtitle">Sales up to date</p>
-                    </div>
+                    <button class="sidebar-nav-item active" data-tab="registration" data-tooltip="Event Registration">
+                        <span class="sidebar-nav-icon">
+                            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                        </span>
+                        <span class="sidebar-nav-label">Event Registration</span>
+                    </button>
 
-                    <div class="stat-box stat-next-event" id="nextEventBox">
-                        <h3 id="nextEventTitle">Loading...</h3>
-                        <p id="nextEventSubtitle">Checking schedule...</p>
-                    </div>
-                </div>
-                
-                <button id="cleanupBtn" class="btn-cleanup">🧹 Remove Ghost Events (No Registration)</button>
-                <input type="text" id="searchBar" placeholder="Search/Filter...">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="clickable" data-sort="0">Department</th>
-                            <th class="clickable" data-sort="1">Event</th>
-                            <th class="clickable" data-sort="2">Duration</th>
-                            <th>Status</th>
-                            <th>Remarks</th>
-                            <th style="text-align: center;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+                    <button class="sidebar-nav-item" data-tab="sales" data-tooltip="Sales Tracker">
+                        <span class="sidebar-nav-icon">
+                            <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+                        </span>
+                        <span class="sidebar-nav-label">Sales Tracker</span>
+                    </button>
 
-    <!-- TAB 2: SALES TRACKER -->
-    <div id="tab-sales" class="tab-content">
-        <div class="container" style="flex-direction: column;">
-            <div class="card" style="width: 100%; box-sizing: border-box;">
-                
-                <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                    <h2 style="margin:0; border:none; padding:0;">Sales Tracker</h2>
-                    <div>
-                        <button class="quick-nav-btn" onclick="document.querySelector('[data-tab=\'registration\']').click()">← View Dashboard</button>
-                        <button class="quick-nav-btn" onclick="document.querySelector('[data-tab=\'reports\']').click()">View Reports →</button>
-                    </div>
+                    <button class="sidebar-nav-item" data-tab="reports" data-tooltip="Reports &amp; Analytics">
+                        <span class="sidebar-nav-icon">
+                            <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 7.92l-1.41-1.41-7.09 7.97-4-4L2 17.09z"/></svg>
+                        </span>
+                        <span class="sidebar-nav-label">Reports &amp; Analytics</span>
+                    </button>
                 </div>
 
-                <div class="sales-header-bar">
-                    <div class="sales-event-selector">
-                        <label>Selected Event:</label>
-                        <select id="salesEventSelect">
-                            <option value="">Select an Event...</option>
-                        </select>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">Admin</div>
+
+                    <button class="sidebar-nav-item disabled" data-tooltip="User Management (Coming Soon)">
+                        <span class="sidebar-nav-icon">
+                            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        </span>
+                        <span class="sidebar-nav-label">User Management</span>
+                        <span class="sidebar-badge">SOON</span>
+                    </button>
+
+                    <button class="sidebar-nav-item disabled" data-tooltip="Audit Log (Coming Soon)">
+                        <span class="sidebar-nav-icon">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        </span>
+                        <span class="sidebar-nav-label">Audit Log</span>
+                        <span class="sidebar-badge">SOON</span>
+                    </button>
+                </div>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-user" title="Guest — Log in to sync your settings">
+                    <div class="sidebar-user-avatar">G</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">Guest</div>
+                        <div class="sidebar-user-role">Not signed in</div>
                     </div>
-                    <div class="sales-add-brand">
-                        <input type="text" id="newBrandName" placeholder="Add new brand...">
-                        <button id="addBrandBtn">+ Add</button>
-                    </div>
-                    <div class="sales-actions">
-                        <button id="printBtn" class="btn-action btn-print" title="Print this report">🖨️ Print PDF</button>
-                        <button id="zeroFillBtn" class="btn-action btn-zero" title="Fill all completely empty cells with 0">0️⃣ Zero-Out</button>
-                        <button id="exportBtn" class="btn-action btn-export">⬇ Export</button>
-                        <div class="grand-total-card">
-                            <span>Grand Total</span>
-                            <h3 id="floatingGrandTotal">RM 0.00</h3>
+                </div>
+                <div class="sidebar-footer">
+                    <span class="sidebar-version">v1.6 • 2025</span>
+                    <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar" aria-label="Toggle sidebar">
+                        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Drawer overlay for mobile -->
+        <div class="drawer-overlay" id="drawerOverlay"></div>
+
+        <!-- ==================== MAIN AREA ==================== -->
+        <div class="main-area" id="mainArea">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn" title="Open menu" aria-label="Open menu">
+                        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                    </button>
+                    <span class="topbar-title" id="topbarTitle">Event Registration</span>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-icon-btn" id="settingsBtn" title="Settings" aria-label="Open settings">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- TAB 1: REGISTRATION -->
+                <div id="tab-registration" class="tab-content active">
+                    <div class="container">
+                        <div class="card calendar-card">
+                            <h2>Promotion Calendar</h2>
+                            <div id="calendar"></div>
+                            <div class="calendar-legend">
+                                <div class="legend-item"><div class="legend-dot"></div> Promotions</div>
+                            </div>
+                        </div>
+
+                        <div class="card form-card">
+                            <h2 id="formTitle">Fair Registration</h2>
+                            <form id="regForm">
+                                <input type="hidden" id="editRegId" value="">
+                                <label>Department:</label>
+                                <select id="department" required>
+                                    <option value="" disabled selected>Select Department...</option>
+                                </select>
+                                <label>Start &amp; End Date:</label>
+                                <div class="date-row">
+                                    <div class="date-col"><input type="date" id="startDate" required></div>
+                                    <div class="date-col"><input type="date" id="endDate" required></div>
+                                </div>
+                                <label>Duration (Days):</label>
+                                <input type="text" id="duration" readonly placeholder="Auto-calculated...">
+                                <label>New Promotion/Event Name:</label>
+                                <input type="text" id="newEventName" placeholder="e.g. Mega Sale..." required>
+                                <label>Remarks / Notes:</label>
+                                <textarea id="notes" rows="2" placeholder="Optional details..."></textarea>
+                                <button type="submit" id="submitBtn">Add Event to Calendar</button>
+                                <button type="button" id="cancelEditBtn">Cancel Edit</button>
+                            </form>
+                        </div>
+
+                        <div class="card table-card">
+                            <h2>Dashboard &amp; Registrations</h2>
+                            
+                            <div class="dashboard-stats">
+                                <div class="stat-box stat-health-ok" id="healthBox">
+                                    <h3 id="healthTitle" class="stat-health-title">All Good!</h3>
+                                    <p id="healthSubtitle">Sales up to date</p>
+                                </div>
+
+                                <div class="stat-box stat-next-event" id="nextEventBox">
+                                    <h3 id="nextEventTitle">Loading...</h3>
+                                    <p id="nextEventSubtitle">Checking schedule...</p>
+                                </div>
+                            </div>
+                            
+                            <button id="cleanupBtn" class="btn-cleanup">🧹 Remove Ghost Events (No Registration)</button>
+                            <input type="text" id="searchBar" placeholder="Search/Filter...">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th class="clickable" data-sort="0">Department</th>
+                                        <th class="clickable" data-sort="1">Event</th>
+                                        <th class="clickable" data-sort="2">Duration</th>
+                                        <th>Status</th>
+                                        <th>Remarks</th>
+                                        <th style="text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <div class="save-status-bar" id="saveStatusBar"></div>
+                <!-- TAB 2: SALES TRACKER -->
+                <div id="tab-sales" class="tab-content">
+                    <div class="container" style="flex-direction: column;">
+                        <div class="card" style="width: 100%; box-sizing: border-box;">
+                            <div class="sales-header-bar">
+                                <div class="sales-event-selector">
+                                    <label>Selected Event:</label>
+                                    <select id="salesEventSelect">
+                                        <option value="">Select an Event...</option>
+                                    </select>
+                                </div>
+                                <div class="sales-add-brand">
+                                    <input type="text" id="newBrandName" placeholder="Add new brand...">
+                                    <button id="addBrandBtn">+ Add</button>
+                                </div>
+                                <div class="sales-actions">
+                                    <button id="printBtn" class="btn-action btn-print" title="Print this report">🖨️ Print PDF</button>
+                                    <button id="zeroFillBtn" class="btn-action btn-zero" title="Fill all completely empty cells with 0">0️⃣ Zero-Out</button>
+                                    <button id="exportBtn" class="btn-action btn-export">⬇ Export</button>
+                                    <div class="grand-total-card">
+                                        <span>Grand Total</span>
+                                        <h3 id="floatingGrandTotal">RM 0.00</h3>
+                                    </div>
+                                </div>
+                            </div>
 
-                <!-- DESKTOP VIEW -->
-                <div class="sales-grid-wrapper">
-                    <table class="sales-table" id="salesGrid">
-                        <thead id="salesGridHead"></thead>
-                        <tbody id="salesGridBody"></tbody>
-                    </table>
-                </div>
+                            <div class="save-status-bar" id="saveStatusBar"></div>
 
-                <!-- MOBILE VIEW -->
-                <div class="mobile-card-view" id="mobileSalesGrid">
-                    <!-- Rendered dynamically via JS -->
-                </div>
+                            <div class="sales-grid-wrapper">
+                                <table class="sales-table" id="salesGrid">
+                                    <thead id="salesGridHead"></thead>
+                                    <tbody id="salesGridBody"></tbody>
+                                </table>
+                            </div>
 
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 3: REPORTS & ANALYTICS -->
-    <div id="tab-reports" class="tab-content">
-        <div class="container" style="flex-direction: column;">
-            
-            <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <h2 style="margin:0; border:none; padding:0;">Reports & Analytics</h2>
-                <div>
-                    <button class="quick-nav-btn" onclick="document.querySelector('[data-tab=\'sales\']').click()">← Back to Tracker</button>
-                </div>
-            </div>
-
-            <div class="reports-controls">
-                <label style="margin:0; font-weight:bold; color: var(--parkson-green);">Select Event to Analyze:</label>
-                <select id="reportsEventSelect">
-                    <option value="">Select an Event...</option>
-                </select>
-            </div>
-
-            <div class="reports-grid">
-                <div class="report-card">
-                    <h4>Total Revenue</h4>
-                    <h2 id="reportTotalRevenue">RM 0.00</h2>
-                    <p>Combined sales of all brands</p>
-                </div>
-                <div class="report-card" style="border-left-color: var(--edit-blue);">
-                    <h4>Top Performing Brand</h4>
-                    <h2 id="reportTopBrand">-</h2>
-                    <p id="reportTopBrandSales">RM 0.00 in sales</p>
-                </div>
-                <div class="report-card" style="border-left-color: #f39c12;">
-                    <h4>Best Sales Day</h4>
-                    <h2 id="reportBestDay">-</h2>
-                    <p id="reportBestDaySales">RM 0.00 in sales</p>
-                </div>
-            </div>
-
-            <div class="charts-container">
-                <div class="chart-card">
-                    <h3>Total Sales by Brand</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="brandChart"></canvas>
+                            <div class="mobile-card-view" id="mobileSalesGrid"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="chart-card">
-                    <h3>Daily Sales Trend</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="dailyChart"></canvas>
+
+                <!-- TAB 3: REPORTS & ANALYTICS -->
+                <div id="tab-reports" class="tab-content">
+                    <div class="container" style="flex-direction: column;">
+                        <div class="reports-controls">
+                            <label style="margin:0; font-weight:bold; color: var(--parkson-green);">Select Event to Analyze:</label>
+                            <select id="reportsEventSelect">
+                                <option value="">Select an Event...</option>
+                            </select>
+                        </div>
+
+                        <div class="reports-grid">
+                            <div class="report-card">
+                                <h4>Total Revenue</h4>
+                                <h2 id="reportTotalRevenue">RM 0.00</h2>
+                                <p>Combined sales of all brands</p>
+                            </div>
+                            <div class="report-card" style="border-left-color: var(--edit-blue);">
+                                <h4>Top Performing Brand</h4>
+                                <h2 id="reportTopBrand">-</h2>
+                                <p id="reportTopBrandSales">RM 0.00 in sales</p>
+                            </div>
+                            <div class="report-card" style="border-left-color: #f39c12;">
+                                <h4>Best Sales Day</h4>
+                                <h2 id="reportBestDay">-</h2>
+                                <p id="reportBestDaySales">RM 0.00 in sales</p>
+                            </div>
+                        </div>
+
+                        <div class="charts-container">
+                            <div class="chart-card">
+                                <h3>Total Sales by Brand</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="brandChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Daily Sales Trend</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="dailyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -912,7 +1609,6 @@
             </div>
 
             <div class="settings-body">
-                <!-- DISPLAY PANEL -->
                 <div class="settings-panel active" data-settings-panel="display">
                     <div class="settings-group">
                         <div class="settings-group-title">Appearance</div>
@@ -952,7 +1648,6 @@
                     </div>
                 </div>
 
-                <!-- DEFAULTS PANEL -->
                 <div class="settings-panel" data-settings-panel="defaults">
                     <div class="settings-group">
                         <div class="settings-group-title">Event Registration Defaults</div>
@@ -982,14 +1677,13 @@
                     </div>
                 </div>
 
-                <!-- DATA PANEL -->
                 <div class="settings-panel" data-settings-panel="data">
                     <div class="settings-group">
                         <div class="settings-group-title">Export</div>
                         <div class="settings-row">
                             <div class="settings-row-label">
                                 <label>Export All Data</label>
-                                <div class="settings-hint">Download events, registrations & sales as one CSV</div>
+                                <div class="settings-hint">Download events, registrations &amp; sales as one CSV</div>
                             </div>
                             <div class="settings-row-control">
                                 <button class="settings-btn-save" style="padding:8px 16px;font-size:13px;" id="exportAllBtn">Download</button>
@@ -1019,7 +1713,6 @@
                     </div>
                 </div>
 
-                <!-- ABOUT PANEL -->
                 <div class="settings-panel" data-settings-panel="about">
                     <div class="settings-group">
                         <div class="settings-group-title">About</div>
@@ -1057,6 +1750,7 @@
         const LS_SALES_EVENT = 'parkson_active_sales_event';
         const LS_REPORTS_EVENT = 'parkson_active_reports_event';
         const LS_SETTINGS_KEY = 'parkson_settings_v1';
+        const LS_SIDEBAR_COLLAPSED = 'parkson_sidebar_collapsed';
 
         const DEFAULT_SETTINGS = {
             theme: 'light',
@@ -1384,18 +2078,29 @@
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
-            btn.classList.add('active');
+            if (btn) btn.classList.add('active');
             
             localStorage.setItem(LS_TAB_KEY, tabId);
+
+            const titleMap = {
+                registration: 'Event Registration',
+                sales: 'Sales Tracker',
+                reports: 'Reports & Analytics'
+            };
+            document.getElementById('topbarTitle').textContent = titleMap[tabId] || '';
+            document.body.setAttribute('data-active-tab', tabId);
 
             if (tabId === 'sales') { loadSalesEventsDropdown('salesEventSelect'); } 
             else if (tabId === 'reports') { loadSalesEventsDropdown('reportsEventSelect'); }
             else if (tabId === 'registration' && calendar) { calendar.render(); }
+
+            // Close mobile drawer if open
+            closeMobileDrawer();
         }
 
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        document.querySelectorAll('.sidebar-nav-item[data-tab]').forEach(btn => {
             btn.addEventListener('click', (e) => switchTab(e.currentTarget.dataset.tab, e.currentTarget));
         });
 
@@ -1422,7 +2127,6 @@
             departmentInput.appendChild(option);
         }
 
-        // Populate settings default department dropdown too
         function populateSettingsDeptDropdown() {
             const sel = document.getElementById('settingDefaultDept');
             if (!sel) return;
@@ -1778,9 +2482,58 @@
             renderDashboard(target);
         }
 
+        // ---------- SIDEBAR LOGIC ----------
+        const sidebar = document.getElementById('sidebar');
+        const mainArea = document.getElementById('mainArea');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        function applySidebarState() {
+            const collapsed = localStorage.getItem(LS_SIDEBAR_COLLAPSED) === 'true';
+            if (collapsed && window.innerWidth > 768) {
+                sidebar.classList.add('collapsed');
+                mainArea.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainArea.classList.remove('sidebar-collapsed');
+            }
+        }
+
+        sidebarToggle.addEventListener('click', () => {
+            const isNowCollapsed = !sidebar.classList.contains('collapsed');
+            if (isNowCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainArea.classList.add('sidebar-collapsed');
+                localStorage.setItem(LS_SIDEBAR_COLLAPSED, 'true');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainArea.classList.remove('sidebar-collapsed');
+                localStorage.setItem(LS_SIDEBAR_COLLAPSED, 'false');
+            }
+        });
+
+        function openMobileDrawer() {
+            sidebar.classList.add('drawer-open');
+            drawerOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileDrawer() {
+            sidebar.classList.remove('drawer-open');
+            drawerOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        mobileMenuBtn.addEventListener('click', openMobileDrawer);
+        drawerOverlay.addEventListener('click', closeMobileDrawer);
+
+        window.addEventListener('resize', applySidebarState);
+
         document.addEventListener('DOMContentLoaded', function () {
             loadSettings();
             applySettings();
+            applySidebarState();
 
             const calendarEl = document.getElementById('calendar');
             if (calendarEl) {
@@ -1801,7 +2554,7 @@
 
             loadData().then(() => {
                 const savedTab = localStorage.getItem(LS_TAB_KEY) || 'registration';
-                const tabBtn = document.querySelector(`.tab-btn[data-tab="${savedTab}"]`);
+                const tabBtn = document.querySelector(`.sidebar-nav-item[data-tab="${savedTab}"]`);
                 if (tabBtn) tabBtn.click();
                 if (settings.defaultDepartment) {
                     departmentInput.value = settings.defaultDepartment;
@@ -2153,9 +2906,6 @@
 
         function updateRowTotalsInPlace(dateStr, brandName) {
             if (!currentSalesEvent) return;
-            const start = parseLocalDate(currentSalesEvent.start_date);
-            const endInc = parseLocalDate(currentSalesEvent.end_date);
-            endInc.setDate(endInc.getDate() - 1);
             const dateRows = document.querySelectorAll('#salesGridBody tr');
             let grandTotal = 0;
             const brandTotals = {};
@@ -2488,16 +3238,11 @@
         const settingsCancelBtn = document.getElementById('settingsCancelBtn');
         const settingsSaveBtn = document.getElementById('settingsSaveBtn');
 
-        let pendingSettings = { ...settings };
-
         function openSettingsModal() {
-            pendingSettings = { ...settings };
-            // Populate form fields from current settings
             document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true;
             document.querySelector(`input[name="density"][value="${settings.density}"]`).checked = true;
             document.getElementById('settingDefaultDept').value = settings.defaultDepartment || '';
             document.getElementById('settingDefaultPosRef').value = settings.defaultPosRef || '';
-            // Reset to first tab
             document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
             document.querySelector('.settings-tab-btn[data-settings-tab="display"]').classList.add('active');
@@ -2540,8 +3285,9 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && settingsModal.classList.contains('open')) {
-                closeSettingsModal(false);
+            if (e.key === 'Escape') {
+                if (settingsModal.classList.contains('open')) closeSettingsModal(false);
+                if (sidebar.classList.contains('drawer-open')) closeMobileDrawer();
             }
         });
 
@@ -2554,7 +3300,6 @@
             });
         });
 
-        // Reset settings
         document.getElementById('resetSettingsBtn').addEventListener('click', () => {
             if (!confirm('Reset all settings to defaults? This will not delete any event data.')) return;
             settings = { ...DEFAULT_SETTINGS };
@@ -2564,20 +3309,20 @@
             toast('Settings reset to defaults');
         });
 
-        // Clear local data
         document.getElementById('clearLocalBtn').addEventListener('click', () => {
             if (!confirm('Clear cached selections and preferences from this browser? Your data on the server is not affected.')) return;
             localStorage.removeItem(LS_TAB_KEY);
             localStorage.removeItem(LS_SALES_EVENT);
             localStorage.removeItem(LS_REPORTS_EVENT);
             localStorage.removeItem(LS_SETTINGS_KEY);
+            localStorage.removeItem(LS_SIDEBAR_COLLAPSED);
             settings = { ...DEFAULT_SETTINGS };
             applySettings();
+            applySidebarState();
             openSettingsModal();
             toast('Local cache cleared');
         });
 
-        // Export all data
         document.getElementById('exportAllBtn').addEventListener('click', async () => {
             if (!db) return;
             const btn = document.getElementById('exportAllBtn');
@@ -2628,7 +3373,6 @@
             }
         });
 
-        // Listen for system theme changes when in "system" mode
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             if (settings.theme === 'system') applySettings();
         });
