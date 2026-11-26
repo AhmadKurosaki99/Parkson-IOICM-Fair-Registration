@@ -65,7 +65,6 @@
 
         #cancelEditBtn { background: #95a5a6; display: none; margin-top: 10px; }
         #cancelEditBtn:hover { background: #7f8c8d; box-shadow: 0 4px 10px rgba(149, 165, 166, 0.3); }
-        
         #submitBtn.editing { background: var(--edit-blue); }
         #submitBtn.editing:hover { background: var(--edit-blue-hover); box-shadow: 0 4px 10px rgba(41, 128, 185, 0.3); }
 
@@ -85,13 +84,11 @@
         tbody tr { animation: slideInRow 0.3s ease-out; transition: background-color 0.2s ease; }
         tbody tr:hover { background-color: var(--parkson-green-light); }
 
-        /* Status Badges */
         .status-badge { color: white; font-weight: 700; padding: 5px 10px; border-radius: 2px; font-size: 11px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
         .status-active { background: var(--parkson-green); }
         .status-upcoming { background: var(--edit-blue); }
         .status-completed { background: #95a5a6; }
 
-        /* Progress Bar */
         .progress-container { margin-top: 5px; width: 100%; max-width: 120px; }
         .progress-text { font-size: 10px; color: var(--text-light); font-weight: 600; margin-bottom: 3px; display: block; text-transform: uppercase; }
         .progress-bg { background: #eee; height: 6px; border-radius: 3px; overflow: hidden; }
@@ -99,25 +96,51 @@
 
         .btn-icon { background: transparent; border: none; padding: 8px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; width: 32px; height: 32px; margin: 0; }
         .btn-icon svg { width: 18px; height: 18px; fill: currentColor; }
-        
         .btn-edit { color: #a0aab2; }
         .btn-edit:hover { background: #e3f2fd; color: var(--edit-blue); transform: scale(1.1); }
-        
         .btn-delete { color: #a0aab2; }
         .btn-delete:hover { background: #fee2e2; color: #e74c3c; transform: scale(1.1); }
 
         .btn-cleanup { background: #c0392b; color: white; padding: 8px 15px; font-size: 12px; width: auto; margin-top: 10px; margin-bottom: 10px; display: block; }
         .btn-cleanup:hover { background: #a93226; box-shadow: 0 4px 10px rgba(192, 57, 43, 0.3); }
 
-        .sales-controls { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #ddd; flex-wrap: wrap; }
+        /* --- SALES TRACKER SPECIFIC STYLES --- */
+        .sales-controls { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #ddd; flex-wrap: wrap; align-items: flex-end; }
         .sales-controls select { margin: 0; width: auto; min-width: 200px; }
-        .grid-input { width: 100px; padding: 8px; margin: 0; text-align: right; border: 1px solid transparent; background: transparent; transition: all 0.2s; box-sizing: border-box; }
-        .grid-input:focus, .grid-input:hover { border: 1px solid var(--parkson-green); background: white; }
-        .grid-input[readonly] { background: #f9f9f9; font-weight: bold; color: var(--parkson-green); }
-        .sales-table th, .sales-table td { border: 1px solid #eee; text-align: center; padding: 10px; }
-        .sales-table th { background: var(--parkson-green-light); color: var(--parkson-green); }
-        .sales-table td:first-child, .sales-table th:first-child { text-align: left; font-weight: bold; }
-        .total-row td { background: #fcfcfc; font-weight: 800; color: var(--parkson-green); border-top: 2px solid var(--parkson-green); }
+        .sales-controls input { margin: 0; width: 150px; }
+        
+        .sales-grid-wrapper { max-height: 65vh; overflow: auto; position: relative; border: 1px solid #eee; }
+        
+        .sales-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 0; font-size: 14px; }
+        .sales-table th, .sales-table td { border-right: 1px solid #eee; border-bottom: 1px solid #eee; text-align: center; padding: 10px; background: white; }
+        .sales-table th { background: var(--parkson-green-light); color: var(--parkson-green); position: sticky; top: 0; z-index: 10; font-weight: bold; }
+        .sales-table td:first-child, .sales-table th:first-child { text-align: left; font-weight: bold; position: sticky; left: 0; z-index: 5; border-right: 2px solid #ddd; background: white; }
+        .sales-table th:first-child { z-index: 15; background: var(--parkson-green-light); }
+        .sales-table td:nth-child(2), .sales-table th:nth-child(2) { position: sticky; left: 90px; z-index: 5; border-right: 2px solid #ddd; background: white; }
+        .sales-table th:nth-child(2) { z-index: 15; background: var(--parkson-green-light); }
+
+        .sales-table tbody tr:hover td { background-color: #f9f9f9; }
+        .sales-table tbody tr:hover td:first-child, .sales-table tbody tr:hover td:nth-child(2) { background-color: #f0f0f0; }
+
+        .today-row td { background-color: #fff9c4 !important; }
+        .today-row td:first-child, .today-row td:nth-child(2) { background-color: #fff59d !important; }
+
+        .grid-input { width: 100px; padding: 8px; margin: 0; text-align: right; border: 1px solid transparent; background: transparent; transition: all 0.2s; box-sizing: border-box; font-weight: 600; color: #333; }
+        .grid-input:focus, .grid-input:hover { border: 1px solid var(--parkson-green); background: white; outline: none; }
+        .grid-input[readonly] { background: #f9f9f9; font-weight: bold; color: var(--parkson-green); border: none; }
+        .today-row .grid-input { background: #fffde7; }
+        .today-row .grid-input:focus { background: white; }
+
+        .total-row td { background: #fcfcfc; font-weight: 800; color: var(--parkson-green); border-top: 2px solid var(--parkson-green); position: sticky; bottom: 0; z-index: 10; padding: 15px 10px; }
+        .total-row td:first-child, .total-row td:nth-child(2) { z-index: 15; background: #fcfcfc; }
+
+        .brand-header { display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-del-brand { background: none; border: none; color: #e74c3c; font-weight: bold; cursor: pointer; padding: 0 5px; font-size: 16px; border-radius: 3px; margin: 0; width: auto; display: inline-block; opacity: 0.4; transition: opacity 0.2s; }
+        .btn-del-brand:hover { opacity: 1; background: #fee2e2; }
+        .btn-export { background: #27ae60; color: white; width: auto; padding: 10px 15px; margin: 0; font-size: 13px; }
+        .btn-export:hover { background: #219653; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
+        .btn-fill { background: #f39c12; color: white; width: auto; padding: 10px 15px; margin: 0; font-size: 13px; }
+        .btn-fill:hover { background: #e67e22; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); }
 
         #calendar { font-family: 'Segoe UI', sans-serif; }
         .fc-toolbar { margin-bottom: 20px !important; display: flex; align-items: center; justify-content: space-between; }
@@ -152,6 +175,8 @@
             header h1 { font-size: 16px; }
             .card { padding: 15px; }
             .grid-input { width: 70px; font-size: 12px; }
+            .sales-table td:nth-child(2), .sales-table th:nth-child(2) { position: static; }
+            .sales-table td:first-child, .sales-table th:first-child { position: static; }
         }
     </style>
 </head>
@@ -235,6 +260,7 @@
         <div class="container" style="flex-direction: column;">
             <div class="card" style="width: 100%; box-sizing: border-box;">
                 <h2>Sales Tracker (Excel View)</h2>
+                
                 <div class="sales-controls">
                     <div>
                         <label style="margin-top:0;">Select Event:</label>
@@ -245,12 +271,17 @@
                     <div>
                         <label style="margin-top:0;">Add Brand Column:</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="text" id="newBrandName" placeholder="e.g. Samsonite" style="margin:0; width:150px;">
+                            <input type="text" id="newBrandName" placeholder="e.g. Samsonite">
                             <button id="addBrandBtn" style="margin:0; width:auto; padding: 0 15px;">+ Add</button>
                         </div>
                     </div>
+                    <div style="margin-left: auto; display: flex; gap: 10px;">
+                        <button id="autoFillBtn" class="btn-fill" title="Copy the first entered number to all empty days for that brand">✨ Auto-Fill Empty Days</button>
+                        <button id="exportBtn" class="btn-export">⬇ Export to Excel</button>
+                    </div>
                 </div>
-                <div style="overflow-x: auto;">
+
+                <div class="sales-grid-wrapper">
                     <table class="sales-table" id="salesGrid">
                         <thead id="salesGridHead"></thead>
                         <tbody id="salesGridBody"></tbody>
@@ -280,7 +311,6 @@
         let currentSalesData = [];
         let currentSalesEvent = null;
 
-        // Helper: Get today's date at local midnight
         function getTodayMidnight() {
             const d = new Date();
             d.setHours(0,0,0,0);
@@ -317,33 +347,21 @@
 
         function showError(msg) { toast(msg, 'error'); console.error(msg); }
 
-        // --- AUTO-STATUS & PROGRESS CALCULATIONS ---
         function getEventStatusAndProgress(event) {
             if (!event) return { status: 'Unknown', progress: null };
-            
             const today = getTodayMidnight();
             const start = parseLocalDate(event.start_date);
-            
-            // end_date from DB is exclusive (e.g., event ends on the 5th, DB says the 6th)
             const endInc = parseLocalDate(event.end_date);
             endInc.setDate(endInc.getDate() - 1); 
 
-            if (today > endInc) {
-                return { status: 'Completed', progress: null };
-            } else if (today < start) {
-                return { status: 'Upcoming', progress: null };
-            } else {
-                // It is happening right now
-                const totalDays = Math.round((endInc - start) / (1000 * 3600 * 24)) + 1;
-                const daysPassed = Math.round((today - start) / (1000 * 3600 * 24));
-                const currentDay = daysPassed + 1;
-                const percent = Math.min(100, (currentDay / totalDays) * 100);
-                
-                return { 
-                    status: 'Active', 
-                    progress: { current: currentDay, total: totalDays, percent: percent }
-                };
-            }
+            if (today > endInc) return { status: 'Completed', progress: null };
+            if (today < start) return { status: 'Upcoming', progress: null };
+            
+            const totalDays = Math.round((endInc - start) / (1000 * 3600 * 24)) + 1;
+            const daysPassed = Math.round((today - start) / (1000 * 3600 * 24));
+            const currentDay = daysPassed + 1;
+            const percent = Math.min(100, (currentDay / totalDays) * 100);
+            return { status: 'Active', progress: { current: currentDay, total: totalDays, percent: percent } };
         }
 
         function switchTab(tabId, btn) {
@@ -351,7 +369,6 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             btn.classList.add('active');
-            
             if (tabId === 'sales') { loadSalesEventsDropdown(); } 
             else if (tabId === 'registration' && calendar) { calendar.render(); }
         }
@@ -365,7 +382,6 @@
         const submitBtn = document.getElementById('submitBtn');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const editRegId = document.getElementById('editRegId');
-        
         const tableBody = document.getElementById('tableBody');
         const searchBar = document.getElementById('searchBar');
         const startDateInput = document.getElementById('startDate');
@@ -406,16 +422,12 @@
                         calendar.addEvent({ id: e.id, title: e.title, start: e.start_date, end: e.end_date, color: '#1c4a3b' });
                     });
                 }
-
                 const { data: regData, error: regErr } = await db.from('registrations').select('*').order('created_at', { ascending: false });
                 if (regErr) { showError('Failed to load registrations: ' + regErr.message); return; }
                 registrations = regData || [];
                 filteredRegistrations = registrations;
                 renderDashboard();
-            } catch (err) {
-                showError('Network error while loading data.');
-                console.error(err);
-            }
+            } catch (err) { showError('Network error while loading data.'); console.error(err); }
         }
 
         form.addEventListener('submit', async function (e) {
@@ -424,7 +436,6 @@
             if (!departmentInput.value) { showError('Please select a department.'); return; }
             if (!newEventNameInput.value.trim()) { showError('Please enter an event name.'); return; }
             if (!startDateInput.value || !endDateInput.value) { showError('Please select both dates.'); return; }
-            
             const start = parseLocalDate(startDateInput.value);
             const end = parseLocalDate(endDateInput.value);
             if (end < start) { showError('End Date cannot be before Start Date!'); return; }
@@ -433,7 +444,6 @@
             const endExclusive = new Date(end);
             endExclusive.setDate(endExclusive.getDate() + 1);
             const endString = formatLocalDate(endExclusive);
-            
             const isEditing = editRegId.value !== "";
 
             submitBtn.disabled = true;
@@ -444,22 +454,12 @@
                     const regId = editRegId.value;
                     const oldReg = registrations.find(r => String(r.id) === String(regId));
                     const oldTitle = oldReg ? oldReg.event_title : eventName;
-
                     const { error: regErr } = await db.from('registrations').update({
-                        department: departmentInput.value,
-                        event_title: eventName,
-                        duration: durationInput.value,
-                        notes: notesInput.value
+                        department: departmentInput.value, event_title: eventName, duration: durationInput.value, notes: notesInput.value
                     }).eq('id', regId);
                     if (regErr) throw regErr;
-
-                    const { error: evErr } = await db.from('events').update({ 
-                        title: eventName,
-                        start_date: startDateInput.value, 
-                        end_date: endString 
-                    }).eq('title', oldTitle);
+                    const { error: evErr } = await db.from('events').update({ title: eventName, start_date: startDateInput.value, end_date: endString }).eq('title', oldTitle);
                     if (evErr) throw evErr;
-
                     toast('Registration updated successfully!');
                 } else {
                     let existingEvent = savedEvents.find(e => e.title.toLowerCase() === eventName.toLowerCase());
@@ -470,15 +470,12 @@
                         const { error } = await db.from('events').insert([{ title: eventName, start_date: startDateInput.value, end_date: endString }]);
                         if (error) throw error;
                     }
-
                     const { error: regErr } = await db.from('registrations').insert([{
                         department: departmentInput.value, event_title: eventName, duration: durationInput.value, status: "Active", notes: notesInput.value
                     }]);
                     if (regErr) throw regErr;
-
                     toast('Event saved successfully!');
                 }
-
                 resetForm();
                 await loadData();
                 loadSalesEventsDropdown();
@@ -520,23 +517,18 @@
             }
 
             const rowsHtml = dataToRender.map(item => {
-                // Find the event dates to calculate status
                 const ev = savedEvents.find(e => e.title === item.event_title);
                 const statusData = getEventStatusAndProgress(ev);
-                
                 let statusBadgeClass = 'status-active';
                 if (statusData.status === 'Completed') statusBadgeClass = 'status-completed';
                 if (statusData.status === 'Upcoming') statusBadgeClass = 'status-upcoming';
                 
-                // Build the progress bar HTML if the event is currently active
                 let progressHtml = '';
                 if (statusData.progress) {
                     progressHtml = `
                         <div class="progress-container">
                             <span class="progress-text">Day ${statusData.progress.current} of ${statusData.progress.total}</span>
-                            <div class="progress-bg">
-                                <div class="progress-fill" style="width: ${statusData.progress.percent}%"></div>
-                            </div>
+                            <div class="progress-bg"><div class="progress-fill" style="width: ${statusData.progress.percent}%"></div></div>
                         </div>
                     `;
                 }
@@ -573,7 +565,6 @@
                 const id = editBtn.dataset.id;
                 const reg = registrations.find(r => String(r.id) === String(id));
                 if (!reg) return;
-
                 const ev = savedEvents.find(e => e.title === reg.event_title);
 
                 editRegId.value = reg.id;
@@ -586,13 +577,9 @@
                     const endInc = parseLocalDate(ev.end_date);
                     endInc.setDate(endInc.getDate() - 1);
                     endDateInput.value = formatLocalDate(endInc);
-                } else {
-                    startDateInput.value = "";
-                    endDateInput.value = "";
-                }
+                } else { startDateInput.value = ""; endDateInput.value = ""; }
 
                 calculateDuration();
-                
                 formTitle.textContent = "Edit Registration";
                 submitBtn.textContent = "Update Registration";
                 submitBtn.classList.add('editing');
@@ -604,28 +591,20 @@
                 const id = deleteBtn.dataset.id;
                 const eventTitle = deleteBtn.dataset.title;
                 if (!confirm('Delete this registration?')) return;
-
                 try {
                     const { error: delErr } = await db.from('registrations').delete().eq('id', id);
                     if (delErr) throw delErr;
-
                     const { data: remaining, error: remErr } = await db.from('registrations').select('id').eq('event_title', eventTitle);
                     if (remErr) throw remErr;
-
                     if (!remaining || remaining.length === 0) {
                         const { error: evDelErr } = await db.from('events').delete().eq('title', eventTitle);
                         if (evDelErr) throw evDelErr;
                     }
-                    
                     if (editRegId.value === id) resetForm();
-                    
                     toast('Registration deleted.');
                     await loadData();
                     loadSalesEventsDropdown();
-                } catch (err) {
-                    showError('Delete failed: ' + (err.message || 'unknown error'));
-                    console.error(err);
-                }
+                } catch (err) { showError('Delete failed: ' + (err.message || 'unknown error')); console.error(err); }
             }
         });
 
@@ -667,19 +646,13 @@
                         const ev = info.event;
                         const start = ev.start ? ev.start.toLocaleDateString() : '';
                         let end = start;
-                        if (ev.end) {
-                            const d = new Date(ev.end);
-                            d.setDate(d.getDate() - 1);
-                            end = d.toLocaleDateString();
-                        }
+                        if (ev.end) { const d = new Date(ev.end); d.setDate(d.getDate() - 1); end = d.toLocaleDateString(); }
                         alert(`Event: ${ev.title}\nDates: ${start} to ${end}\n\nTo delete this event, use the Dashboard table or Cleanup button.`);
                     }
                 });
                 calendar.render();
             }
             loadData();
-            
-            // Auto-refresh statuses every hour (3600000 ms) to update Day X of Y
             setInterval(loadData, 3600000); 
         });
 
@@ -690,10 +663,8 @@
                 if (regErr) throw regErr;
                 const registeredTitles = new Set((regs || []).map(r => r.event_title.toLowerCase()));
                 const orphans = savedEvents.filter(e => !registeredTitles.has(e.title.toLowerCase()));
-
                 if (orphans.length === 0) { toast('No ghost events found. All clean!'); return; }
                 for (const ev of orphans) { await db.from('events').delete().eq('id', ev.id); }
-                
                 toast(`Removed ${orphans.length} ghost event(s).`);
                 await loadData();
                 loadSalesEventsDropdown();
@@ -710,7 +681,6 @@
                 salesEventSelect.appendChild(opt);
             });
             
-            // SMART SELECTION: Auto-select current event if none is selected
             if (!currentVal && savedEvents.length > 0) {
                 const today = getTodayMidnight();
                 let activeEvent = savedEvents.find(e => {
@@ -719,17 +689,11 @@
                     endInc.setDate(endInc.getDate() - 1);
                     return today >= start && today <= endInc;
                 });
-
-                // If no event is happening today, pick the most recent one based on start date
                 if (!activeEvent) {
                     const sorted = [...savedEvents].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
                     activeEvent = sorted[0];
                 }
-
-                if (activeEvent) {
-                    salesEventSelect.value = activeEvent.title;
-                    loadSalesGrid(); // Load the grid immediately
-                }
+                if (activeEvent) { salesEventSelect.value = activeEvent.title; loadSalesGrid(); }
             } else if (currentVal) {
                 salesEventSelect.value = currentVal;
             }
@@ -737,6 +701,7 @@
 
         salesEventSelect.addEventListener('change', () => loadSalesGrid());
 
+        // --- SALES GRID RENDERER ---
         async function loadSalesGrid() {
             const eventTitle = salesEventSelect.value;
             const headEl = document.getElementById('salesGridHead');
@@ -768,9 +733,13 @@
             let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
             if (brands.length === 0) brands = ["Brand 1"];
 
-            let headHtml = `<tr><th>Date</th><th>Day</th>`;
-            brands.forEach(b => { headHtml += `<th>${escapeHtml(b)}</th>`; });
-            headHtml += `<th>Daily Total</th><th>POS Ref</th></tr>`;
+            const todayStr = formatLocalDate(getTodayMidnight());
+
+            let headHtml = `<tr><th style="min-width: 90px;">Date</th><th style="min-width: 60px;">Day</th>`;
+            brands.forEach(b => { 
+                headHtml += `<th><div class="brand-header"><span>${escapeHtml(b)}</span><button class="btn-del-brand" data-brand="${escapeHtml(b)}" title="Delete Brand">✕</button></div></th>`; 
+            });
+            headHtml += `<th style="min-width: 110px;">Daily Total</th><th style="min-width: 80px;">POS Ref</th></tr>`;
             headEl.innerHTML = headHtml;
 
             let bodyHtml = '';
@@ -782,11 +751,13 @@
                 const dateStr = formatLocalDate(d);
                 const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
                 const displayDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                const isToday = (dateStr === todayStr);
+                const rowClass = isToday ? 'today-row' : '';
 
                 let rowTotal = 0;
                 let posRef = '-';
 
-                bodyHtml += `<tr><td>${displayDate}</td><td>${dayName}</td>`;
+                bodyHtml += `<tr class="${rowClass}"><td>${displayDate}</td><td>${dayName}</td>`;
                 brands.forEach(b => {
                     const entry = currentSalesData.find(s => s.sale_date === dateStr && s.brand_name === b);
                     const val = entry ? entry.amount : 0;
@@ -876,6 +847,111 @@
                 await loadSalesGrid();
             } catch (err) { showError('Failed to add brand: ' + (err.message || 'unknown error')); console.error(err); }
         }
+
+        // --- DELETE BRAND (IDEA 1) ---
+        document.getElementById('salesGridHead').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-del-brand');
+            if (!btn) return;
+            const brand = btn.dataset.brand;
+            const eventTitle = salesEventSelect.value;
+            
+            if (!confirm(`Are you sure you want to delete the brand "${brand}" and all its sales data?`)) return;
+
+            try {
+                const { error } = await db.from('fair_daily_sales').delete().eq('event_title', eventTitle).eq('brand_name', brand);
+                if (error) throw error;
+                toast(`Brand "${brand}" deleted.`);
+                await loadSalesGrid();
+            } catch (err) { showError('Failed to delete brand: ' + (err.message || 'unknown error')); console.error(err); }
+        });
+
+        // --- AUTO-FILL (IDEA 3) ---
+        document.getElementById('autoFillBtn').addEventListener('click', async () => {
+            if (!currentSalesEvent || currentSalesData.length === 0) { showError("No data to auto-fill."); return; }
+            if (!confirm('This will copy the first entered number to all EMPTY days for each brand. Proceed?')) return;
+
+            const eventTitle = currentSalesEvent.title;
+            const start = parseLocalDate(currentSalesEvent.start_date);
+            const endInc = parseLocalDate(currentSalesEvent.end_date);
+            endInc.setDate(endInc.getDate() - 1);
+
+            const dates = [];
+            let current = new Date(start);
+            while (current <= endInc) {
+                dates.push(formatLocalDate(current));
+                current.setDate(current.getDate() + 1);
+            }
+
+            let brands = [...new Set(currentSalesData.map(s => s.brand_name))];
+            let inserts = [];
+
+            brands.forEach(b => {
+                // Find the first non-zero entry for this brand
+                const firstEntry = dates.map(d => currentSalesData.find(s => s.sale_date === d && s.brand_name === b)).find(s => s && s.amount > 0);
+                
+                if (firstEntry) {
+                    const fillAmount = firstEntry.amount;
+                    dates.forEach(d => {
+                        const exists = currentSalesData.find(s => s.sale_date === d && s.brand_name === b);
+                        if (!exists) {
+                            inserts.push({
+                                event_title: eventTitle, department: DEFAULT_DEPARTMENT, sale_date: d, brand_name: b, amount: fillAmount, pos_ref: DEFAULT_POS_REF
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (inserts.length === 0) { toast("No empty days found to fill."); return; }
+
+            try {
+                const { error } = await db.from('fair_daily_sales').insert(inserts);
+                if (error) throw error;
+                toast(`Auto-filled ${inserts.length} empty days!`);
+                await loadSalesGrid();
+            } catch (err) { showError('Auto-fill failed: ' + (err.message || 'unknown error')); console.error(err); }
+        });
+
+        // --- EXPORT TO EXCEL (IDEA 5) ---
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            if (!currentSalesEvent) { showError('Please select an event first.'); return; }
+            
+            const table = document.getElementById('salesGrid');
+            let csvContent = "";
+            
+            // Loop through rows and cells
+            for (let i = 0; i < table.rows.length; i++) {
+                let rowData = [];
+                for (let j = 0; j < table.rows[i].cells.length; j++) {
+                    const cell = table.rows[i].cells[j];
+                    const input = cell.querySelector('input');
+                    
+                    if (input) {
+                        // Use input value if it exists, otherwise empty string
+                        rowData.push(input.value ? input.value : '0');
+                    } else {
+                        // Use text content, strip out the 'RM ' from totals
+                        let text = cell.innerText.replace('RM ', '').trim();
+                        // Remove the 'X' from brand headers
+                        if (j > 1 && i === 0) text = text.replace('✕', '').trim();
+                        rowData.push(text);
+                    }
+                }
+                // Join columns with comma, wrap in quotes to handle commas in numbers if any
+                csvContent += rowData.map(val => `"${val}"`).join(",") + "\n";
+            }
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Sales_Report_${currentSalesEvent.title}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast('Excel report downloaded!');
+        });
     </script>
 </body>
 </html>
