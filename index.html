@@ -58,7 +58,6 @@
         .date-row { display: flex; gap: 15px; }
         .date-col { flex: 1; }
 
-        /* Button Styles */
         button { background: var(--parkson-green); color: white; border: none; padding: 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 15px; font-weight: 700; transition: all 0.2s ease; margin-top: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
         button:hover { background: var(--parkson-green-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(28, 74, 59, 0.3); }
         button:active { transform: translateY(0); }
@@ -86,7 +85,17 @@
         tbody tr { animation: slideInRow 0.3s ease-out; transition: background-color 0.2s ease; }
         tbody tr:hover { background-color: var(--parkson-green-light); }
 
-        .status-active { color: white; font-weight: 700; background: var(--parkson-green); padding: 5px 10px; border-radius: 2px; font-size: 11px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;}
+        /* Status Badges */
+        .status-badge { color: white; font-weight: 700; padding: 5px 10px; border-radius: 2px; font-size: 11px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        .status-active { background: var(--parkson-green); }
+        .status-upcoming { background: var(--edit-blue); }
+        .status-completed { background: #95a5a6; }
+
+        /* Progress Bar */
+        .progress-container { margin-top: 5px; width: 100%; max-width: 120px; }
+        .progress-text { font-size: 10px; color: var(--text-light); font-weight: 600; margin-bottom: 3px; display: block; text-transform: uppercase; }
+        .progress-bg { background: #eee; height: 6px; border-radius: 3px; overflow: hidden; }
+        .progress-fill { background: var(--parkson-green); height: 100%; border-radius: 3px; transition: width 0.5s ease; }
 
         .btn-icon { background: transparent; border: none; padding: 8px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; width: 32px; height: 32px; margin: 0; }
         .btn-icon svg { width: 18px; height: 18px; fill: currentColor; }
@@ -172,7 +181,6 @@
             <div class="card form-card">
                 <h2 id="formTitle">Fair Registration</h2>
                 <form id="regForm">
-                    <!-- Hidden field to track if we are editing -->
                     <input type="hidden" id="editRegId" value="">
                     
                     <label>Department:</label>
@@ -272,6 +280,13 @@
         let currentSalesData = [];
         let currentSalesEvent = null;
 
+        // Helper: Get today's date at local midnight
+        function getTodayMidnight() {
+            const d = new Date();
+            d.setHours(0,0,0,0);
+            return d;
+        }
+
         function escapeHtml(str) {
             return String(str ?? '').replace(/[&<>"']/g, c => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -302,11 +317,41 @@
 
         function showError(msg) { toast(msg, 'error'); console.error(msg); }
 
+        // --- AUTO-STATUS & PROGRESS CALCULATIONS ---
+        function getEventStatusAndProgress(event) {
+            if (!event) return { status: 'Unknown', progress: null };
+            
+            const today = getTodayMidnight();
+            const start = parseLocalDate(event.start_date);
+            
+            // end_date from DB is exclusive (e.g., event ends on the 5th, DB says the 6th)
+            const endInc = parseLocalDate(event.end_date);
+            endInc.setDate(endInc.getDate() - 1); 
+
+            if (today > endInc) {
+                return { status: 'Completed', progress: null };
+            } else if (today < start) {
+                return { status: 'Upcoming', progress: null };
+            } else {
+                // It is happening right now
+                const totalDays = Math.round((endInc - start) / (1000 * 3600 * 24)) + 1;
+                const daysPassed = Math.round((today - start) / (1000 * 3600 * 24));
+                const currentDay = daysPassed + 1;
+                const percent = Math.min(100, (currentDay / totalDays) * 100);
+                
+                return { 
+                    status: 'Active', 
+                    progress: { current: currentDay, total: totalDays, percent: percent }
+                };
+            }
+        }
+
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             btn.classList.add('active');
+            
             if (tabId === 'sales') { loadSalesEventsDropdown(); } 
             else if (tabId === 'registration' && calendar) { calendar.render(); }
         }
@@ -373,7 +418,6 @@
             }
         }
 
-        // --- FORM SUBMIT (Handles Add AND Edit) ---
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             if (!db) return;
@@ -397,9 +441,7 @@
 
             try {
                 if (isEditing) {
-                    // UPDATE REGISTRATION
                     const regId = editRegId.value;
-                    // Get old title to find the correct event in the `events` table
                     const oldReg = registrations.find(r => String(r.id) === String(regId));
                     const oldTitle = oldReg ? oldReg.event_title : eventName;
 
@@ -411,7 +453,6 @@
                     }).eq('id', regId);
                     if (regErr) throw regErr;
 
-                    // Update the event dates in the `events` table (match by old title)
                     const { error: evErr } = await db.from('events').update({ 
                         title: eventName,
                         start_date: startDateInput.value, 
@@ -421,7 +462,6 @@
 
                     toast('Registration updated successfully!');
                 } else {
-                    // CREATE NEW
                     let existingEvent = savedEvents.find(e => e.title.toLowerCase() === eventName.toLowerCase());
                     if (existingEvent) {
                         const { error } = await db.from('events').update({ start_date: startDateInput.value, end_date: endString }).eq('id', existingEvent.id);
@@ -479,12 +519,37 @@
                 return;
             }
 
-            const rowsHtml = dataToRender.map(item => `
+            const rowsHtml = dataToRender.map(item => {
+                // Find the event dates to calculate status
+                const ev = savedEvents.find(e => e.title === item.event_title);
+                const statusData = getEventStatusAndProgress(ev);
+                
+                let statusBadgeClass = 'status-active';
+                if (statusData.status === 'Completed') statusBadgeClass = 'status-completed';
+                if (statusData.status === 'Upcoming') statusBadgeClass = 'status-upcoming';
+                
+                // Build the progress bar HTML if the event is currently active
+                let progressHtml = '';
+                if (statusData.progress) {
+                    progressHtml = `
+                        <div class="progress-container">
+                            <span class="progress-text">Day ${statusData.progress.current} of ${statusData.progress.total}</span>
+                            <div class="progress-bg">
+                                <div class="progress-fill" style="width: ${statusData.progress.percent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
                 <tr>
                     <td><strong>${escapeHtml(item.department)}</strong></td>
                     <td>${escapeHtml(item.event_title)}</td>
                     <td>${escapeHtml(item.duration) || 'N/A'}</td>
-                    <td><span class="status-active">${escapeHtml(item.status)}</span></td>
+                    <td>
+                        <span class="status-badge ${statusBadgeClass}">${statusData.status}</span>
+                        ${progressHtml}
+                    </td>
                     <td>${escapeHtml(item.notes) || '-'}</td>
                     <td style="text-align: center; white-space: nowrap;">
                         <button class="btn-icon btn-edit" data-id="${item.id}" title="Edit Registration">
@@ -495,17 +560,16 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
             tableBody.innerHTML = rowsHtml;
         }
 
-        // --- TABLE ACTION HANDLING (Edit & Delete) ---
         tableBody.addEventListener('click', async (e) => {
             const editBtn = e.target.closest('.btn-edit');
             const deleteBtn = e.target.closest('.btn-delete');
 
             if (editBtn) {
-                // Handle Edit
                 const id = editBtn.dataset.id;
                 const reg = registrations.find(r => String(r.id) === String(id));
                 if (!reg) return;
@@ -533,13 +597,10 @@
                 submitBtn.textContent = "Update Registration";
                 submitBtn.classList.add('editing');
                 cancelEditBtn.style.display = 'block';
-
-                // Scroll to form on mobile
                 document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
             }
 
             if (deleteBtn) {
-                // Handle Delete
                 const id = deleteBtn.dataset.id;
                 const eventTitle = deleteBtn.dataset.title;
                 if (!confirm('Delete this registration?')) return;
@@ -617,6 +678,9 @@
                 calendar.render();
             }
             loadData();
+            
+            // Auto-refresh statuses every hour (3600000 ms) to update Day X of Y
+            setInterval(loadData, 3600000); 
         });
 
         document.getElementById('cleanupBtn').addEventListener('click', async () => {
@@ -645,7 +709,30 @@
                 opt.text = e.title;
                 salesEventSelect.appendChild(opt);
             });
-            if (currentVal) salesEventSelect.value = currentVal;
+            
+            // SMART SELECTION: Auto-select current event if none is selected
+            if (!currentVal && savedEvents.length > 0) {
+                const today = getTodayMidnight();
+                let activeEvent = savedEvents.find(e => {
+                    const start = parseLocalDate(e.start_date);
+                    const endInc = parseLocalDate(e.end_date);
+                    endInc.setDate(endInc.getDate() - 1);
+                    return today >= start && today <= endInc;
+                });
+
+                // If no event is happening today, pick the most recent one based on start date
+                if (!activeEvent) {
+                    const sorted = [...savedEvents].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+                    activeEvent = sorted[0];
+                }
+
+                if (activeEvent) {
+                    salesEventSelect.value = activeEvent.title;
+                    loadSalesGrid(); // Load the grid immediately
+                }
+            } else if (currentVal) {
+                salesEventSelect.value = currentVal;
+            }
         }
 
         salesEventSelect.addEventListener('change', () => loadSalesGrid());
