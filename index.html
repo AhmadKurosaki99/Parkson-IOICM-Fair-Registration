@@ -384,7 +384,9 @@
         .month-selector { display: flex; align-items: center; gap: 15px; }
         .month-selector h2 { margin: 0; border: none; padding: 0; font-size: 20px; width: 200px; text-align: center; }
         .month-selector button { width: auto; margin: 0; padding: 8px 16px; font-size: 14px; }
-        .store-table td input { width: 120px; }
+        .store-table th, .store-table td { text-align: center !important; }
+        .store-table td:first-child, .store-table td:nth-child(2) { text-align: center !important; }
+        .store-table input { text-align: center !important; width: 100%; max-width: 160px; }
     </style>
 </head>
 <body data-active-tab="home">
@@ -789,6 +791,7 @@
         function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
         function parseLocalDate(str) { if (!str) return null; const [y, m, d] = str.split('-').map(Number); if (!y || !m || !d) return null; return new Date(y, m - 1, d); }
         function formatLocalDate(date) { const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, '0'); const d = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${d}`; }
+        function formatCurrency(num) { return (parseFloat(num) || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
         function toast(msg, type = 'success') { const el = document.createElement('div'); el.className = `toast ${type}`; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); }
         function showError(msg) { toast(msg, 'error'); console.error(msg); }
 
@@ -1383,17 +1386,17 @@
                 rowsHtml += `<tr class="${rowClass}">
                     <td style="text-align:left; font-weight:bold;">${displayDate}</td>
                     <td>${dayName}</td>
-                    <td><div class="grid-input-wrapper"><input type="number" class="grid-input store-sales-input" data-date="${dateStr}" value="${entry.total_sales > 0 ? entry.total_sales : ''}" placeholder="0.00"><span class="cell-status hidden"></span></div></td>
-                    <td><div class="grid-input-wrapper"><input type="number" class="grid-input store-tx-input" data-date="${dateStr}" value="${entry.transactions > 0 ? entry.transactions : ''}" placeholder="0"><span class="cell-status hidden"></span></div></td>
-                    <td style="font-weight:700; color:var(--parkson-green);" class="avg-cell">RM ${((entry.total_sales / entry.transactions) || 0).toFixed(2)}</td>
+                    <td><div class="grid-input-wrapper"><input type="text" class="grid-input store-sales-input" data-date="${dateStr}" value="${entry.total_sales > 0 ? formatCurrency(entry.total_sales) : ''}" placeholder="0.00"><span class="cell-status hidden"></span></div></td>
+                    <td><div class="grid-input-wrapper"><input type="text" class="grid-input store-tx-input" data-date="${dateStr}" value="${entry.transactions > 0 ? entry.transactions.toLocaleString() : ''}" placeholder="0"><span class="cell-status hidden"></span></div></td>
+                    <td style="font-weight:700; color:var(--parkson-green);" class="avg-cell">RM ${formatCurrency(entry.total_sales / entry.transactions)}</td>
                     <td><input type="text" class="grid-input store-notes-input" data-date="${dateStr}" value="${escapeHtml(entry.notes)}" placeholder="Notes..."></td>
                 </tr>`;
             }
 
             tbody.innerHTML = rowsHtml;
-            totalRevEl.textContent = `RM ${totalRevenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            totalRevEl.textContent = `RM ${formatCurrency(totalRevenue)}`;
             totalTxEl.textContent = totalTransactions.toLocaleString();
-            avgSalesEl.textContent = `RM ${((totalRevenue / totalTransactions) || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            avgSalesEl.textContent = `RM ${formatCurrency(totalRevenue / totalTransactions)}`;
         }
 
         document.getElementById('prevMonthBtn').addEventListener('click', () => { currentStoreDate.setMonth(currentStoreDate.getMonth() - 1); loadStoreSales(); });
@@ -1409,10 +1412,13 @@
             const notesInput = tr.querySelector('.store-notes-input');
             const avgCell = tr.querySelector('.avg-cell');
 
-            const salesVal = parseFloat(salesInput.value) || 0;
-            const txVal = parseFloat(txInput.value) || 0;
+            const salesVal = parseFloat(salesInput.value.replace(/,/g, '')) || 0;
+            const txVal = parseFloat(txInput.value.replace(/,/g, '')) || 0;
             const notesVal = notesInput.value;
-            avgCell.textContent = `RM ${((salesVal / txVal) || 0).toFixed(2)}`;
+            
+            salesInput.value = salesVal > 0 ? formatCurrency(salesVal) : '';
+            txInput.value = txVal > 0 ? txVal.toLocaleString() : '';
+            avgCell.textContent = `RM ${formatCurrency(salesVal / txVal)}`;
 
             const statusEl = target.nextElementSibling;
             if (statusEl) { statusEl.className = 'cell-status saving'; statusEl.textContent = '⟳'; }
