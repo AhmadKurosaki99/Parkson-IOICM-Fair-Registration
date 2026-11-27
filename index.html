@@ -50,8 +50,6 @@
         .sidebar.collapsed .sidebar-nav-icon svg { width: 22px; height: 22px; }
         .sidebar-nav-item.disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
         .sidebar-nav-item.disabled:hover { background: transparent; }
-        .sidebar-badge { background: var(--parkson-green); color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; margin-left: auto; transition: opacity 0.2s ease; }
-        .sidebar.collapsed .sidebar-badge { display: none; }
         .sidebar-bottom { border-top: 1px solid var(--sidebar-border); padding: 12px; transition: padding 0.25s ease; flex-shrink: 0; }
         .sidebar.collapsed .sidebar-bottom { padding: 12px 8px; }
         .sidebar-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 0 10px; gap: 8px; }
@@ -377,6 +375,16 @@
             .total-row td { background: #e0e0e0 !important; font-weight: bold !important; border-top: 2px solid #000 !important; position: static !important; color: #000 !important; }
             .weekend-row td, .today-row td { background: white !important; color: #000 !important; }
         }
+        /* Store Sales Custom Styles */
+        .store-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card-bg); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .store-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .store-stat-card { background: var(--card-bg); padding: 20px; border-radius: 4px; border-left: 5px solid var(--parkson-green); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .store-stat-card h4 { margin: 0; font-size: 13px; color: var(--text-light); text-transform: uppercase; }
+        .store-stat-card h2 { margin: 10px 0 0 0; font-size: 28px; color: var(--parkson-green); border: none; padding: 0; }
+        .month-selector { display: flex; align-items: center; gap: 15px; }
+        .month-selector h2 { margin: 0; border: none; padding: 0; font-size: 20px; width: 200px; text-align: center; }
+        .month-selector button { width: auto; margin: 0; padding: 8px 16px; font-size: 14px; }
+        .store-table td input { width: 120px; }
     </style>
 </head>
 <body data-active-tab="home">
@@ -408,11 +416,15 @@
                         <span class="sidebar-nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 7.92l-1.41-1.41-7.09 7.97-4-4L2 17.09z"/></svg></span>
                         <span class="sidebar-nav-label">Reports &amp; Analytics</span>
                     </button>
+                    <button class="sidebar-nav-item" data-tab="store-sales" data-tooltip="Overall Store Sales">
+                        <span class="sidebar-nav-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg></span>
+                        <span class="sidebar-nav-label">Overall Store Sales</span>
+                    </button>
                 </div>
             </nav>
             <div class="sidebar-bottom">
                 <div class="sidebar-footer">
-                    <span class="sidebar-version">v1.6 • 2025</span>
+                    <span class="sidebar-version">v1.7 • 2025</span>
                     <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar" aria-label="Toggle sidebar">
                         <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
                     </button>
@@ -580,6 +592,48 @@
                         </div>
                     </div>
                 </div>
+                <div id="tab-store-sales" class="tab-content">
+                    <div class="container" style="flex-direction: column; max-width: 100%;">
+                        <div class="store-header">
+                            <div class="month-selector">
+                                <button id="prevMonthBtn">◀</button>
+                                <h2 id="currentMonthDisplay">Loading...</h2>
+                                <button id="nextMonthBtn">▶</button>
+                            </div>
+                        </div>
+                        <div class="store-stats">
+                            <div class="store-stat-card">
+                                <h4>Total Revenue</h4>
+                                <h2 id="storeTotalRevenue">RM 0.00</h2>
+                            </div>
+                            <div class="store-stat-card">
+                                <h4>Total Transactions</h4>
+                                <h2 id="storeTotalTransactions">0</h2>
+                            </div>
+                            <div class="store-stat-card">
+                                <h4>Average Sales/Transaction</h4>
+                                <h2 id="storeAverageSales">RM 0.00</h2>
+                            </div>
+                        </div>
+                        <div class="card" style="width: 100%; display: flex; flex-direction: column; box-sizing: border-box; padding: 20px;">
+                            <div class="sales-grid-wrapper" style="border: none;">
+                                <table class="sales-table store-table" id="storeSalesGrid">
+                                    <thead>
+                                        <tr>
+                                            <th style="min-width: 80px; width: 80px;">Date</th>
+                                            <th style="min-width: 60px; width: 60px;">Day</th>
+                                            <th style="min-width: 140px;">Total Sales (RM)</th>
+                                            <th style="min-width: 140px;">Total Transactions</th>
+                                            <th style="min-width: 140px;">Average Sales/Transaction</th>
+                                            <th style="min-width: 200px; text-align: left;">Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="storeSalesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -605,7 +659,7 @@
                         <div class="settings-row">
                             <div class="settings-row-label">
                                 <label>Theme</label>
-                                <div class="settings-hint">Choose light, dark, or follow your system</div>
+                                <div class="settings-hint">Choose light or dark mode</div>
                             </div>
                             <div class="settings-row-control">
                                 <div class="settings-radio-group">
@@ -613,8 +667,6 @@
                                     <label for="themeLight">Light</label>
                                     <input type="radio" name="theme" id="themeDark" value="dark">
                                     <label for="themeDark">Dark</label>
-                                    <input type="radio" name="theme" id="themeSystem" value="system">
-                                    <label for="themeSystem">System</label>
                                 </div>
                             </div>
                         </div>
@@ -667,18 +719,6 @@
                 </div>
                 <div class="settings-panel" data-settings-panel="data">
                     <div class="settings-group">
-                        <div class="settings-group-title">Export</div>
-                        <div class="settings-row">
-                            <div class="settings-row-label">
-                                <label>Export All Data</label>
-                                <div class="settings-hint">Download events, registrations &amp; sales as one CSV</div>
-                            </div>
-                            <div class="settings-row-control">
-                                <button class="settings-btn-save" style="padding:8px 16px;font-size:13px;" id="exportAllBtn">Download</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="settings-group">
                         <div class="settings-group-title" style="color:#e74c3c;">Danger Zone</div>
                         <div class="settings-row">
                             <div class="settings-row-label">
@@ -705,7 +745,7 @@
                         <div class="settings-group-title">About</div>
                         <div class="settings-about-text">
                             <p><strong>Parkson IOICM 127</strong><br>Promotion &amp; Fair Registration System</p>
-                            <p><strong>Version:</strong> 1.6.0<br><strong>Last updated:</strong> 2025</p>
+                            <p><strong>Version:</strong> 1.7.0<br><strong>Last updated:</strong> 2025</p>
                             <p>This tool helps track promotional fairs, registrations, daily sales by brand, and generates reports. Data is stored securely in the cloud.</p>
                         </div>
                     </div>
@@ -740,6 +780,8 @@
 
         let savedEvents = [], registrations = [], filteredRegistrations = [], calendar, sortAscending = true, currentSalesData = [], currentSalesEvent = null, allSalesData = [], brandChartInstance = null, dailyChartInstance = null, salesGridFirstLoad = true, dashboardFirstLoad = true;
         const cellSaveStates = new Map();
+
+        let currentStoreDate = new Date(); let storeSalesData = [];
 
         function getDefaultDepartment() { return settings.defaultDepartment || 'Dept 44'; }
         function getDefaultPosRef() { return settings.defaultPosRef || '327'; }
@@ -846,11 +888,14 @@
             document.getElementById('tab-' + tabId).classList.add('active');
             if (btn) btn.classList.add('active');
             localStorage.setItem(LS_TAB_KEY, tabId);
-            const titleMap = { home: 'Home', registration: 'Event Registration', sales: 'Sales Tracker', reports: 'Reports & Analytics' };
+            const titleMap = { home: 'Home', registration: 'Event Registration', sales: 'Sales Tracker', reports: 'Reports & Analytics', 'store-sales': 'Overall Store Sales' };
             document.getElementById('topbarTitle').textContent = titleMap[tabId] || '';
             document.body.setAttribute('data-active-tab', tabId);
             const contentArea = document.getElementById('contentArea'); if (contentArea) contentArea.scrollTop = 0;
-            if (tabId === 'sales') loadSalesEventsDropdown('salesEventSelect'); else if (tabId === 'reports') loadSalesEventsDropdown('reportsEventSelect'); else if (tabId === 'registration' && calendar) calendar.render();
+            if (tabId === 'sales') loadSalesEventsDropdown('salesEventSelect'); 
+            else if (tabId === 'reports') loadSalesEventsDropdown('reportsEventSelect'); 
+            else if (tabId === 'registration' && calendar) calendar.render();
+            else if (tabId === 'store-sales') loadStoreSales();
             closeMobileDrawer();
         }
 
@@ -1299,10 +1344,101 @@
             dailyChartInstance = new Chart(ctxLine, { type: 'line', data: { labels: dateLabels, datasets: [{ label: 'Daily Sales (RM)', data: dailyData, borderColor: '#2980b9', backgroundColor: 'rgba(41, 128, 185, 0.1)', borderWidth: 3, fill: true, tension: 0.3, pointBackgroundColor: '#2980b9', pointRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
         }
 
+        async function loadStoreSales() {
+            const tbody = document.getElementById('storeSalesBody');
+            const currentMonthDisplay = document.getElementById('currentMonthDisplay');
+            const totalRevEl = document.getElementById('storeTotalRevenue');
+            const totalTxEl = document.getElementById('storeTotalTransactions');
+            const avgSalesEl = document.getElementById('storeAverageSales');
+
+            const year = currentStoreDate.getFullYear();
+            const month = currentStoreDate.getMonth();
+            currentMonthDisplay.textContent = currentStoreDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="skeleton skeleton-text"></span></td></tr>`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startStr = formatLocalDate(firstDay), endStr = formatLocalDate(lastDay);
+
+            const { data, error } = await db.from('store_daily_sales').select('*').gte('sale_date', startStr).lte('sale_date', endStr);
+            if (error) { showError('Failed to load store sales: ' + error.message); return; }
+            storeSalesData = data || [];
+
+            let totalRevenue = 0, totalTransactions = 0;
+            let rowsHtml = '';
+            const todayStr = formatLocalDate(getTodayMidnight());
+
+            for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+                const dateStr = formatLocalDate(d);
+                const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+                const displayDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                const isToday = (dateStr === todayStr), isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                let rowClass = ''; if (isToday) rowClass = 'today-row'; else if (isWeekend) rowClass = 'weekend-row';
+
+                const entry = storeSalesData.find(s => s.sale_date === dateStr) || { total_sales: 0, transactions: 0, notes: '' };
+                totalRevenue += entry.total_sales || 0;
+                totalTransactions += entry.transactions || 0;
+
+                rowsHtml += `<tr class="${rowClass}">
+                    <td style="text-align:left; font-weight:bold;">${displayDate}</td>
+                    <td>${dayName}</td>
+                    <td><div class="grid-input-wrapper"><input type="number" class="grid-input store-sales-input" data-date="${dateStr}" value="${entry.total_sales > 0 ? entry.total_sales : ''}" placeholder="0.00"><span class="cell-status hidden"></span></div></td>
+                    <td><div class="grid-input-wrapper"><input type="number" class="grid-input store-tx-input" data-date="${dateStr}" value="${entry.transactions > 0 ? entry.transactions : ''}" placeholder="0"><span class="cell-status hidden"></span></div></td>
+                    <td style="font-weight:700; color:var(--parkson-green);" class="avg-cell">RM ${((entry.total_sales / entry.transactions) || 0).toFixed(2)}</td>
+                    <td><input type="text" class="grid-input store-notes-input" data-date="${dateStr}" value="${escapeHtml(entry.notes)}" placeholder="Notes..."></td>
+                </tr>`;
+            }
+
+            tbody.innerHTML = rowsHtml;
+            totalRevEl.textContent = `RM ${totalRevenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            totalTxEl.textContent = totalTransactions.toLocaleString();
+            avgSalesEl.textContent = `RM ${((totalRevenue / totalTransactions) || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        document.getElementById('prevMonthBtn').addEventListener('click', () => { currentStoreDate.setMonth(currentStoreDate.getMonth() - 1); loadStoreSales(); });
+        document.getElementById('nextMonthBtn').addEventListener('click', () => { currentStoreDate.setMonth(currentStoreDate.getMonth() + 1); loadStoreSales(); });
+
+        document.getElementById('storeSalesBody').addEventListener('change', async (e) => {
+            const target = e.target;
+            if (!target.matches('.grid-input')) return;
+            const dateStr = target.dataset.date;
+            const tr = target.closest('tr');
+            const salesInput = tr.querySelector('.store-sales-input');
+            const txInput = tr.querySelector('.store-tx-input');
+            const notesInput = tr.querySelector('.store-notes-input');
+            const avgCell = tr.querySelector('.avg-cell');
+
+            const salesVal = parseFloat(salesInput.value) || 0;
+            const txVal = parseFloat(txInput.value) || 0;
+            const notesVal = notesInput.value;
+            avgCell.textContent = `RM ${((salesVal / txVal) || 0).toFixed(2)}`;
+
+            const statusEl = target.nextElementSibling;
+            if (statusEl) { statusEl.className = 'cell-status saving'; statusEl.textContent = '⟳'; }
+
+            try {
+                let existing = storeSalesData.find(s => s.sale_date === dateStr);
+                if (existing) {
+                    const { error } = await db.from('store_daily_sales').update({ total_sales: salesVal, transactions: txVal, notes: notesVal }).eq('id', existing.id); if (error) throw error;
+                    existing.total_sales = salesVal; existing.transactions = txVal; existing.notes = notesVal;
+                } else if (salesVal > 0 || txVal > 0 || notesVal) {
+                    const { data: inserted, error } = await db.from('store_daily_sales').insert([{ sale_date: dateStr, total_sales: salesVal, transactions: txVal, notes: notesVal }]).select();
+                    if (error) throw error;
+                    if (inserted && inserted[0]) storeSalesData.push(inserted[0]);
+                }
+                if (statusEl) { statusEl.className = 'cell-status saved'; statusEl.textContent = '✓'; setTimeout(() => { statusEl.className = 'cell-status hidden'; statusEl.textContent = ''; }, 1500); }
+                loadStoreSales();
+            } catch (err) {
+                if (statusEl) { statusEl.className = 'cell-status failed'; statusEl.textContent = '!'; }
+                showError('Failed to save store sales: ' + err.message); console.error(err);
+            }
+        });
+
         const settingsModal = document.getElementById('settingsModal'), settingsBtn = document.getElementById('settingsBtn'), settingsCloseBtn = document.getElementById('settingsCloseBtn'), settingsCancelBtn = document.getElementById('settingsCancelBtn'), settingsSaveBtn = document.getElementById('settingsSaveBtn');
 
         function openSettingsModal() {
-            document.querySelector(`input[name="theme"][value="${settings.theme}"]`).checked = true; document.querySelector(`input[name="density"][value="${settings.density}"]`).checked = true;
+            document.querySelector(`input[name="theme"][value="${settings.theme === 'system' ? 'light' : settings.theme}"]`).checked = true; document.querySelector(`input[name="density"][value="${settings.density}"]`).checked = true;
             document.getElementById('settingDefaultDept').value = settings.defaultDepartment || ''; document.getElementById('settingDefaultPosRef').value = settings.defaultPosRef || '';
             document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
             document.querySelector('.settings-tab-btn[data-settings-tab="display"]').classList.add('active'); document.querySelector('.settings-panel[data-settings-panel="display"]').classList.add('active');
@@ -1341,27 +1477,6 @@
             if (!confirm('Clear cached selections and preferences from this browser? Your data on the server is not affected.')) return;
             localStorage.removeItem(LS_TAB_KEY); localStorage.removeItem(LS_SALES_EVENT); localStorage.removeItem(LS_REPORTS_EVENT); localStorage.removeItem(LS_SETTINGS_KEY); localStorage.removeItem(LS_SIDEBAR_COLLAPSED);
             settings = { ...DEFAULT_SETTINGS }; applySettings(); applySidebarState(); openSettingsModal(); toast('Local cache cleared');
-        });
-
-        document.getElementById('exportAllBtn').addEventListener('click', async () => {
-            if (!db) return;
-            const btn = document.getElementById('exportAllBtn'), oldText = btn.textContent; btn.disabled = true; btn.textContent = 'Exporting...';
-            try {
-                const [eventsRes, regsRes, salesRes] = await Promise.all([ db.from('events').select('*'), db.from('registrations').select('*'), db.from('fair_daily_sales').select('*') ]);
-                if (eventsRes.error) throw eventsRes.error; if (regsRes.error) throw regsRes.error; if (salesRes.error) throw salesRes.error;
-                const lines = []; lines.push('=== EVENTS ===');
-                const evKeys = eventsRes.data.length ? Object.keys(eventsRes.data[0]) : ['id', 'title', 'start_date', 'end_date'];
-                lines.push(evKeys.map(k => `"${k}"`).join(',')); eventsRes.data.forEach(r => lines.push(evKeys.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(',')));
-                lines.push(''); lines.push('=== REGISTRATIONS ===');
-                const regKeys = regsRes.data.length ? Object.keys(regsRes.data[0]) : ['id', 'department', 'event_title', 'duration', 'status', 'notes'];
-                lines.push(regKeys.map(k => `"${k}"`).join(',')); regsRes.data.forEach(r => lines.push(regKeys.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(',')));
-                lines.push(''); lines.push('=== SALES ===');
-                const salesKeys = salesRes.data.length ? Object.keys(salesRes.data[0]) : ['id', 'event_title', 'department', 'sale_date', 'brand_name', 'amount', 'pos_ref'];
-                lines.push(salesKeys.map(k => `"${k}"`).join(',')); salesRes.data.forEach(r => lines.push(salesKeys.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(',')));
-                const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' }), url = URL.createObjectURL(blob), link = document.createElement('a');
-                link.href = url; link.download = `Parkson_AllData_${formatLocalDate(new Date())}.csv`; document.body.appendChild(link); link.click(); document.body.removeChild(link); toast('All data exported');
-            } catch (err) { showError('Export failed: ' + (err.message || 'unknown')); console.error(err); }
-            finally { btn.disabled = false; btn.textContent = oldText; }
         });
 
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (settings.theme === 'system') applySettings(); });
